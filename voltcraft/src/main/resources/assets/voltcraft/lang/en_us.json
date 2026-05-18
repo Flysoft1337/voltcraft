@@ -7,5 +7,11 @@
   "block.voltcraft.low_voltage_transformer": "Low Voltage Transformer (→220V)",
   "block.voltcraft.medium_voltage_transformer": "Medium Voltage Transformer (→10kV)",
   "block.voltcraft.high_voltage_transformer": "High Voltage Transformer (→35kV)",
-  "block.voltcraft.extra_high_voltage_transformer": "Extra High Voltage Transformer (→110kV)"
+  "block.voltcraft.extra_high_voltage_transformer": "Extra High Voltage Transformer (→110kV)",
+  "block.voltcraft.low_voltage_breaker": "Low Voltage Breaker (1kFE/t)",
+  "block.voltcraft.medium_voltage_breaker": "Medium Voltage Breaker (8kFE/t)",
+  "block.voltcraft.high_voltage_breaker": "High Voltage Breaker (32kFE/t)",
+  "block.voltcraft.extra_high_voltage_breaker": "Extra High Voltage Breaker (128kFE/t)",
+  "voltcraft.breaker.reset": "Breaker reset.",
+  "voltcraft.breaker.already_closed": "Breaker is already closed."
 }

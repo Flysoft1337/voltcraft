@@ -1,6 +1,7 @@
 package com.voltcraft.event;
 
 import com.voltcraft.VoltCraft;
+import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.blockentity.CableBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.electric.capability.CableEnergyHandler;
@@ -33,7 +34,17 @@ public final class ModBusEvents {
                 Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.TRANSFORMER.get(),
                 (TransformerBlockEntity be, Direction side) -> {
-                    if (side == null) return be.inputHandler(); // 物品/无向访问
+                    if (side == null) return be.inputHandler();
+                    return side == be.inputFace() ? be.inputHandler() : null;
+                }
+        );
+
+        // 空开仅在输入面暴露；跳闸时返回 BlockedHandler 拒收
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.BREAKER.get(),
+                (BreakerBlockEntity be, Direction side) -> {
+                    if (side == null) return be.inputHandler();
                     return side == be.inputFace() ? be.inputHandler() : null;
                 }
         );

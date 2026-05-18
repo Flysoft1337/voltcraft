@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top":   "voltcraft:block/breaker_top",
+    "front": "voltcraft:block/extra_high_voltage_breaker_closed",
+    "side":  "voltcraft:block/breaker_side"
+  }
+}

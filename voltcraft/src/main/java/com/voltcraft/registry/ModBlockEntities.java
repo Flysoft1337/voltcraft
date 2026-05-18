@@ -1,8 +1,10 @@
 package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
+import com.voltcraft.block.BreakerBlock;
 import com.voltcraft.block.CableBlock;
 import com.voltcraft.block.TransformerBlock;
+import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.blockentity.CableBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.electric.CableTier;
@@ -46,6 +48,21 @@ public final class ModBlockEntities {
                                     ModBlockEntities.TRANSFORMER.get(), pos, state, block.outputTier());
                         },
                         transformerBlocks
+                ).build(null);
+            });
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BreakerBlockEntity>> BREAKER =
+            BLOCK_ENTITIES.register("breaker", () -> {
+                Block[] breakerBlocks = Arrays.stream(CableTier.values())
+                        .map(tier -> ModBlocks.BREAKERS.get(tier).get())
+                        .toArray(Block[]::new);
+                return BlockEntityType.Builder.of(
+                        (pos, state) -> {
+                            BreakerBlock block = (BreakerBlock) state.getBlock();
+                            return new BreakerBlockEntity(
+                                    ModBlockEntities.BREAKER.get(), pos, state, block.tier());
+                        },
+                        breakerBlocks
                 ).build(null);
             });
 

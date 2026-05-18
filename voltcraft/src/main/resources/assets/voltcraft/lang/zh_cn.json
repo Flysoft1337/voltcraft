@@ -7,5 +7,11 @@
   "block.voltcraft.low_voltage_transformer": "低压变压器 (→220V)",
   "block.voltcraft.medium_voltage_transformer": "中压变压器 (→10kV)",
   "block.voltcraft.high_voltage_transformer": "高压变压器 (→35kV)",
-  "block.voltcraft.extra_high_voltage_transformer": "超高压变压器 (→110kV)"
+  "block.voltcraft.extra_high_voltage_transformer": "超高压变压器 (→110kV)",
+  "block.voltcraft.low_voltage_breaker": "低压空开 (1kFE/t)",
+  "block.voltcraft.medium_voltage_breaker": "中压空开 (8kFE/t)",
+  "block.voltcraft.high_voltage_breaker": "高压空开 (32kFE/t)",
+  "block.voltcraft.extra_high_voltage_breaker": "超高压空开 (128kFE/t)",
+  "voltcraft.breaker.reset": "已合闸。",
+  "voltcraft.breaker.already_closed": "空开已处于合闸状态。"
 }
