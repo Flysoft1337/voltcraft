@@ -1,0 +1,7 @@
+{
+  "itemGroup.voltcraft": "伏特工艺",
+  "block.voltcraft.low_voltage_cable": "低压电缆 (220V)",
+  "block.voltcraft.medium_voltage_cable": "中压电缆 (10kV)",
+  "block.voltcraft.high_voltage_cable": "高压电缆 (35kV)",
+  "block.voltcraft.extra_high_voltage_cable": "超高压电缆 (110kV)"
+}

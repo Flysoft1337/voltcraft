@@ -1,0 +1,29 @@
+# Build / IDE
+build/
+out/
+.gradle/
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+bin/
+.vscode/
+
+# 自动生成的资源
+src/generated/
+
+# 运行时
+run/
+runs/
+logs/
+crash-reports/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 本地仓库（maven-publish 输出）
+repo/

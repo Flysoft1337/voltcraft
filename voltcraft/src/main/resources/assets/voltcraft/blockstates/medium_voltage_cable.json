@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "voltcraft:block/medium_voltage_cable" }
+  }
+}

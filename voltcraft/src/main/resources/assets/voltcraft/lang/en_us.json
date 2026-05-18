@@ -1,0 +1,7 @@
+{
+  "itemGroup.voltcraft": "VoltCraft",
+  "block.voltcraft.low_voltage_cable": "Low Voltage Cable (220V)",
+  "block.voltcraft.medium_voltage_cable": "Medium Voltage Cable (10kV)",
+  "block.voltcraft.high_voltage_cable": "High Voltage Cable (35kV)",
+  "block.voltcraft.extra_high_voltage_cable": "Extra High Voltage Cable (110kV)"
+}

@@ -1,0 +1,40 @@
+# Gradle / build
+build/
+out/
+.gradle/
+**/build/
+**/out/
+**/.gradle/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+bin/
+.vscode/
+
+# 数据生成
+**/src/generated/
+
+# 运行时
+run/
+runs/
+logs/
+crash-reports/
+
+# 本地仓库 / 缓存
+**/repo/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# memory（私人开发笔记）
+memory/
+
+# Claude 本地配置
+.claude/
