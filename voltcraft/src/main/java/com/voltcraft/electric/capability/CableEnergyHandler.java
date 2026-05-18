@@ -43,8 +43,9 @@ public final class CableEnergyHandler implements IEnergyStorage {
 
     @Override
     public int getMaxEnergyStored() {
-        EnergyNetwork net = network();
-        return net == null ? 0 : net.cableTier().ratedTransfer();
+        // 电缆是传输管道，不储能。返回 0 让 Jade 等 UI 不绘制储能条；
+        // 电缆的额定传输上限通过我们自己的 Jade provider 显示为 "流量: x / N FE/t"。
+        return 0;
     }
 
     @Override
