@@ -53,5 +53,6 @@
   "voltcraft.jade.transformer_output": "Output: %s",
   "voltcraft.jade.buffer": "Buffer: %s / %s FE",
   "voltcraft.jade.breaker_state": "State: %s",
-  "voltcraft.jade.wiring": "Wiring: %s"
+  "voltcraft.jade.wiring": "Wiring: %s",
+  "entity.voltcraft.soft_cable": "Soft Cable"
 }

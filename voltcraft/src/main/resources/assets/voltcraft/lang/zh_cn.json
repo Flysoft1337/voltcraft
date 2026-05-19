@@ -53,5 +53,6 @@
   "voltcraft.jade.transformer_output": "输出：%s",
   "voltcraft.jade.buffer": "缓存：%s / %s FE",
   "voltcraft.jade.breaker_state": "状态：%s",
-  "voltcraft.jade.wiring": "接线：%s"
+  "voltcraft.jade.wiring": "接线：%s",
+  "entity.voltcraft.soft_cable": "软线"
 }
