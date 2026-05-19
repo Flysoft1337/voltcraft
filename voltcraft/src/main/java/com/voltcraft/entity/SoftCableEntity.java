@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -175,7 +176,31 @@ public class SoftCableEntity extends Entity {
             refreshSyncedEnds(level());
             updateBoundingBox();
         }
-        // S2.5 才接入实际能量传输
+        // 每 tick 跨端转移：从一端 buffer 抽电，塞到另一端 buffer。
+        // 双向尝试，因为生产/消费方向不固定（变压器→端子时 A 是源；端子→变压器无方向，但 buffer 都为空也无害）。
+        transferOnce(endA, endB);
+        transferOnce(endB, endA);
+    }
+
+    private void transferOnce(@Nullable WireAnchorRef src, @Nullable WireAnchorRef dst) {
+        if (src == null || dst == null) return;
+        IEnergyStorage source = bufferOf(src);
+        IEnergyStorage sink = bufferOf(dst);
+        if (source == null || sink == null) return;
+        if (!source.canExtract() || !sink.canReceive()) return;
+        int avail = source.extractEnergy(Integer.MAX_VALUE, true);
+        if (avail <= 0) return;
+        int accepted = sink.receiveEnergy(avail, true);
+        if (accepted <= 0) return;
+        source.extractEnergy(accepted, false);
+        sink.receiveEnergy(accepted, false);
+    }
+
+    @Nullable
+    private IEnergyStorage bufferOf(WireAnchorRef ref) {
+        BlockEntity be = level().getBlockEntity(ref.owner());
+        if (!(be instanceof WireAnchorOwner owner)) return null;
+        return owner.anchorBuffer(ref.anchorIndex());
     }
 
     /** 两端 anchor 必须能解析、属于自己。 */
