@@ -1,5 +1,6 @@
 package com.voltcraft.item;
 
+import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.wire.WireAnchor;
 import com.voltcraft.electric.wire.WireAnchorOwner;
@@ -23,16 +24,21 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 接线钳：把两个 WireAnchor 连成一根 SoftCableEntity。
+ * 软线物品：本身就是线，不是工具。
+ *
+ * 一个 SoftCableItem 实例绑定一个 {@link CableTier}（每个等级一个独立物品）。
  *
  * 流程：
- *   1. 右键一个 WireAnchorOwner 方块 → 选距离玩家瞄准点最近的空闲 anchor，记入手中物品 NBT
- *   2. 再次右键另一个 owner（同 phase 且不同 owner）→ 创建 SoftCableEntity，清空 NBT
- *   3. 在空气中 sneak-右键 → 重置选择
- *
- * 不消耗物品，可视作创造模式的电工工具。后期再考虑掉耐久或耗费"线轴"。
+ *   1. 手持本物品右键一个 {@link WireAnchorOwner} 方块 → 选距玩家瞄准点最近、空闲、
+ *      tier 匹配的 anchor，记入 ItemStack CustomData
+ *   2. 再次右键另一个 owner 的 anchor → 校验：
+ *        * tier 一致（不一致 = 跨等级，禁止）
+ *        * phase 一致
+ *        * 一端 INPUT 一端 OUTPUT（同向不允许）
+ *      通过则创建 SoftCableEntity，消耗 1 个物品，清空 CustomData
+ *   3. 任意时刻右键空气 / 重新选择 → 不重置；要重置就丢弃整个 stack
  */
-public class WireToolItem extends Item {
+public class SoftCableItem extends Item {
 
     private static final String NBT_OWNER_X = "X";
     private static final String NBT_OWNER_Y = "Y";
@@ -40,9 +46,14 @@ public class WireToolItem extends Item {
     private static final String NBT_ANCHOR_IDX = "Idx";
     private static final String NBT_PHASE = "Phase";
 
-    public WireToolItem(Properties properties) {
-        super(properties.stacksTo(1));
+    private final CableTier tier;
+
+    public SoftCableItem(CableTier tier, Properties properties) {
+        super(properties);
+        this.tier = tier;
     }
+
+    public CableTier tier() { return tier; }
 
     @Override
     public InteractionResult useOn(UseOnContext ctx) {
@@ -53,16 +64,14 @@ public class WireToolItem extends Item {
 
         BlockPos pos = ctx.getClickedPos();
         BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof WireAnchorOwner owner)) {
-            return InteractionResult.PASS;
-        }
+        if (!(be instanceof WireAnchorOwner owner)) return InteractionResult.PASS;
 
-        // 选离玩家瞄准点最近的空闲 anchor
+        // 选离瞄准点最近、空闲、且 tier 匹配的 anchor
         Vec3 hit = ctx.getClickLocation();
-        WireAnchor target = pickClosestFreeAnchor(owner, pos, hit);
+        WireAnchor target = pickAnchor(owner, pos, hit, tier);
         if (target == null) {
             player.displayClientMessage(
-                    Component.translatable("voltcraft.wire_tool.no_free_anchor")
+                    Component.translatable("voltcraft.soft_cable.no_anchor")
                             .withStyle(ChatFormatting.RED), true);
             return InteractionResult.CONSUME;
         }
@@ -71,32 +80,37 @@ public class WireToolItem extends Item {
         SelectedAnchor first = readSelected(stack);
 
         if (first == null) {
-            // 第一次：记录
-            writeSelected(stack, new SelectedAnchor(pos.immutable(), target.index(), target.phase()));
+            writeSelected(stack, new SelectedAnchor(pos.immutable(), target.index(),
+                    target.phase(), target.direction()));
             player.displayClientMessage(
-                    Component.translatable("voltcraft.wire_tool.first_picked",
+                    Component.translatable("voltcraft.soft_cable.first_picked",
                             target.phase().shortLabel(),
+                            target.direction().name(),
                             pos.toShortString())
                             .withStyle(ChatFormatting.YELLOW), true);
             return InteractionResult.CONSUME;
         }
 
-        // 第二次：尝试连接
         if (first.owner.equals(pos)) {
             player.displayClientMessage(
-                    Component.translatable("voltcraft.wire_tool.same_block")
+                    Component.translatable("voltcraft.soft_cable.same_block")
                             .withStyle(ChatFormatting.RED), true);
             return InteractionResult.CONSUME;
         }
         if (first.phase != target.phase()) {
             player.displayClientMessage(
-                    Component.translatable("voltcraft.wire_tool.phase_mismatch",
+                    Component.translatable("voltcraft.soft_cable.phase_mismatch",
                             first.phase.shortLabel(), target.phase().shortLabel())
                             .withStyle(ChatFormatting.RED), true);
             return InteractionResult.CONSUME;
         }
+        if (first.direction == target.direction()) {
+            player.displayClientMessage(
+                    Component.translatable("voltcraft.soft_cable.same_direction")
+                            .withStyle(ChatFormatting.RED), true);
+            return InteractionResult.CONSUME;
+        }
 
-        // 占用 anchor + 创建 entity
         BlockEntity beA = level.getBlockEntity(first.owner);
         if (!(beA instanceof WireAnchorOwner ownerA)) {
             clearSelected(stack);
@@ -106,15 +120,20 @@ public class WireToolItem extends Item {
         if (anchorA == null || !anchorA.isFree()) {
             clearSelected(stack);
             player.displayClientMessage(
-                    Component.translatable("voltcraft.wire_tool.first_taken")
+                    Component.translatable("voltcraft.soft_cable.first_taken")
                             .withStyle(ChatFormatting.RED), true);
+            return InteractionResult.CONSUME;
+        }
+        if (anchorA.tier() != tier) {
+            // 选过头了：第一端 anchor 不是本物品 tier。重置以让玩家重选。
+            clearSelected(stack);
             return InteractionResult.CONSUME;
         }
 
         SoftCableEntity wire = SoftCableEntity.place(level, ModEntities.SOFT_CABLE.get(),
                 new WireAnchorRef(first.owner, first.anchorIndex),
                 new WireAnchorRef(pos, target.index()),
-                first.phase);
+                first.phase, tier);
         if (!level.addFreshEntity(wire)) {
             clearSelected(stack);
             return InteractionResult.CONSUME;
@@ -125,20 +144,25 @@ public class WireToolItem extends Item {
         be.setChanged();
         clearSelected(stack);
 
+        if (!player.getAbilities().instabuild) {
+            stack.shrink(1);
+        }
+
         player.displayClientMessage(
-                Component.translatable("voltcraft.wire_tool.connected",
+                Component.translatable("voltcraft.soft_cable.connected",
                         first.phase.shortLabel())
                         .withStyle(ChatFormatting.GREEN), true);
         return InteractionResult.CONSUME;
     }
 
     @Nullable
-    private static WireAnchor pickClosestFreeAnchor(WireAnchorOwner owner, BlockPos pos, Vec3 aim) {
+    private static WireAnchor pickAnchor(WireAnchorOwner owner, BlockPos pos, Vec3 aim, CableTier tier) {
         WireAnchor best = null;
         double bestDist = Double.MAX_VALUE;
         for (int i = 0; i < owner.anchorCount(); i++) {
             WireAnchor a = owner.anchor(i);
             if (a == null || !a.isFree()) continue;
+            if (a.tier() != tier) continue;
             Vec3 worldPos = owner.anchorWorldPos(a, pos);
             double d = worldPos.distanceToSqr(aim);
             if (d < bestDist) {
@@ -157,10 +181,14 @@ public class WireToolItem extends Item {
         if (!tag.contains(NBT_OWNER_X)) return null;
         Phase[] all = Phase.values();
         int phaseIdx = tag.getInt(NBT_PHASE);
+        WireAnchor.Direction dir = tag.getBoolean("Out")
+                ? WireAnchor.Direction.OUTPUT
+                : WireAnchor.Direction.INPUT;
         return new SelectedAnchor(
                 new BlockPos(tag.getInt(NBT_OWNER_X), tag.getInt(NBT_OWNER_Y), tag.getInt(NBT_OWNER_Z)),
                 tag.getInt(NBT_ANCHOR_IDX),
-                all[Math.min(phaseIdx, all.length - 1)]
+                all[Math.min(phaseIdx, all.length - 1)],
+                dir
         );
     }
 
@@ -171,6 +199,7 @@ public class WireToolItem extends Item {
         tag.putInt(NBT_OWNER_Z, sel.owner.getZ());
         tag.putInt(NBT_ANCHOR_IDX, sel.anchorIndex);
         tag.putInt(NBT_PHASE, sel.phase.ordinal());
+        tag.putBoolean("Out", sel.direction == WireAnchor.Direction.OUTPUT);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
@@ -178,5 +207,6 @@ public class WireToolItem extends Item {
         stack.remove(DataComponents.CUSTOM_DATA);
     }
 
-    private record SelectedAnchor(BlockPos owner, int anchorIndex, Phase phase) {}
+    private record SelectedAnchor(BlockPos owner, int anchorIndex,
+                                  Phase phase, WireAnchor.Direction direction) {}
 }

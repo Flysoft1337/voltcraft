@@ -1,5 +1,6 @@
 package com.voltcraft.entity;
 
+import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.wire.WireAnchor;
 import com.voltcraft.electric.wire.WireAnchorOwner;
@@ -54,6 +55,7 @@ public class SoftCableEntity extends Entity {
     @Nullable private WireAnchorRef endA;
     @Nullable private WireAnchorRef endB;
     private Phase phase = Phase.LEGACY;
+    private CableTier tier = CableTier.LOW;
 
     /** 几 tick 抽查一次 anchor 健在。每秒一次足够。 */
     private static final int VALIDATE_INTERVAL = 20;
@@ -63,13 +65,18 @@ public class SoftCableEntity extends Entity {
         this.noPhysics = true;
     }
 
-    /** 服务端构造：放置一根新软线。两端必须同相、必须 free。 */
+    /**
+     * 服务端构造：放置一根新软线。
+     * 调用方必须先校验：两端 anchor 都 free、phase 一致、tier 一致、且必须一端 INPUT 一端 OUTPUT。
+     */
     public static SoftCableEntity place(Level level, EntityType<SoftCableEntity> type,
-                                        WireAnchorRef a, WireAnchorRef b, Phase phase) {
+                                        WireAnchorRef a, WireAnchorRef b,
+                                        Phase phase, CableTier tier) {
         SoftCableEntity ent = new SoftCableEntity(type, level);
         ent.endA = a;
         ent.endB = b;
         ent.phase = phase;
+        ent.tier = tier;
         ent.getEntityData().set(DATA_PHASE, phase.ordinal());
         ent.refreshSyncedEnds(level);
         // 把自身位置放在两端中点（便于客户端发现）
@@ -77,6 +84,8 @@ public class SoftCableEntity extends Entity {
         ent.setPos(mid.x, mid.y, mid.z);
         return ent;
     }
+
+    public CableTier tier() { return tier; }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -176,10 +185,11 @@ public class SoftCableEntity extends Entity {
             refreshSyncedEnds(level());
             updateBoundingBox();
         }
-        // 每 tick 跨端转移：从一端 buffer 抽电，塞到另一端 buffer。
-        // 双向尝试，因为生产/消费方向不固定（变压器→端子时 A 是源；端子→变压器无方向，但 buffer 都为空也无害）。
-        transferOnce(endA, endB);
-        transferOnce(endB, endA);
+        // 单向转移：从 output 端 buffer 抽电 → 推到 input 端 buffer。
+        // output/input 的方向语义在 anchor 上预先定义，软线只是搬运工。
+        WireAnchorRef src = outputEnd();
+        WireAnchorRef dst = inputEnd();
+        transferOnce(src, dst);
     }
 
     private void transferOnce(@Nullable WireAnchorRef src, @Nullable WireAnchorRef dst) {
@@ -203,17 +213,35 @@ public class SoftCableEntity extends Entity {
         return owner.anchorBuffer(ref.anchorIndex());
     }
 
-    /** 两端 anchor 必须能解析、属于自己。 */
+    /** 两端 anchor 必须能解析、属于自己、phase/tier 一致、且方向一在 INPUT 一在 OUTPUT。 */
     private boolean validateEnds() {
         if (endA == null || endB == null) return false;
         WireAnchor a = resolve(endA);
         WireAnchor b = resolve(endB);
         if (a == null || b == null) return false;
-        // anchor 上记录的占用方必须是自己（可能被另一根线抢占）
         if (a.connectedEntityId() != null && a.connectedEntityId() != getId()) return false;
         if (b.connectedEntityId() != null && b.connectedEntityId() != getId()) return false;
-        // 相位一致性
-        return a.phase() == phase && b.phase() == phase;
+        if (a.phase() != phase || b.phase() != phase) return false;
+        if (a.tier() != tier || b.tier() != tier) return false;
+        // 一根软线必须 input↔output；同向是错接
+        return a.direction() != b.direction();
+    }
+
+    /** 找到「output 端」和「input 端」，让传输有明确方向（output→input）。 */
+    @Nullable
+    private WireAnchorRef outputEnd() {
+        if (endA == null || endB == null) return null;
+        WireAnchor a = resolve(endA);
+        if (a == null) return null;
+        return a.isOutput() ? endA : endB;
+    }
+
+    @Nullable
+    private WireAnchorRef inputEnd() {
+        if (endA == null || endB == null) return null;
+        WireAnchor a = resolve(endA);
+        if (a == null) return null;
+        return a.isInput() ? endA : endB;
     }
 
     /** AABB = 两端连线的最小包围盒，向下扩 1 格容纳下垂。 */
@@ -273,6 +301,11 @@ public class SoftCableEntity extends Entity {
         int ord = tag.getInt("Phase");
         Phase[] all = Phase.values();
         phase = all[Math.min(ord, all.length - 1)];
+        if (tag.contains("Tier")) {
+            int tIdx = tag.getInt("Tier");
+            CableTier[] tiers = CableTier.values();
+            tier = tiers[Math.min(tIdx, tiers.length - 1)];
+        }
         getEntityData().set(DATA_PHASE, phase.ordinal());
         refreshSyncedEnds(level());
         updateBoundingBox();
@@ -283,5 +316,6 @@ public class SoftCableEntity extends Entity {
         if (endA != null) tag.put("EndA", endA.save());
         if (endB != null) tag.put("EndB", endB.save());
         tag.putInt("Phase", phase.ordinal());
+        tag.putInt("Tier", tier.ordinal());
     }
 }

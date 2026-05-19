@@ -2,8 +2,8 @@ package com.voltcraft.blockentity;
 
 import com.voltcraft.block.BreakerBlock;
 import com.voltcraft.electric.CableTier;
-import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.protection.BreakerState;
+import com.voltcraft.electric.wire.TopAnchorLayout;
 import com.voltcraft.electric.wire.WireAnchor;
 import com.voltcraft.electric.wire.WireAnchorOwner;
 import net.minecraft.core.BlockPos;
@@ -20,50 +20,31 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 三相空气开关。
+ * 三相空气开关（v2 顶面 6 柱）。
  *
- * 拓扑：FACING 是把手装饰面，不接软线。两侧（FACING 顺时针 / 逆时针）各 3 个接线柱（L/N/E），
- * 共 6 个 anchor。
- *
- * 6 个独立 buffer，跨边推送：bufferA_L → bufferB_L、bufferA_N → bufferB_N 等。
- * 跨边规则保证物理上不可能形成自循环。
+ * 拓扑：顶面 6 柱（3 in + 3 out），FACING 仅作把手装饰。
+ * 三相能量流：L_IN → L_OUT、N_IN → N_OUT、E_IN → E_OUT。
  *
  * 跳闸：
  *   * 任一相 instant 流量 > 200% rated → TRIPPED_OVERLOAD
- *   * 任一相持续 > 120% rated 100 tick → TRIPPED_OVERLOAD
- *   * EARTH 漏电（由 RCD 在 #79 引入）
+ *   * 任一相 持续 > 120% rated 100 tick → TRIPPED_OVERLOAD
+ *   * |L_flow - N_flow| > 阈值 持续 10 tick → TRIPPED_LEAKAGE（RCD）
  */
 public class BreakerBlockEntity extends BlockEntity implements WireAnchorOwner {
 
-    private static final String NBT_BUFFER_A_L = "BufferAL";
-    private static final String NBT_BUFFER_A_N = "BufferAN";
-    private static final String NBT_BUFFER_A_E = "BufferAE";
-    private static final String NBT_BUFFER_B_L = "BufferBL";
-    private static final String NBT_BUFFER_B_N = "BufferBN";
-    private static final String NBT_BUFFER_B_E = "BufferBE";
+    private static final String NBT_BUFFER_PREFIX = "Buf";
     private static final String NBT_OVERLOAD_TICKS = "OverloadTicks";
 
     private static final double OVERLOAD_FACTOR_HOLD = 1.20;
     private static final int OVERLOAD_HOLD_TICKS = 100;
     private static final double OVERLOAD_FACTOR_INSTANT = 2.00;
 
-    /**
-     * RCD 灵敏度：30 mA 等效——在 220V 等效电压下大约 6 FE/t 的 L-N 差流。
-     * 实际游戏里我们用一个固定 FE/t 阈值与持续 tick 数。
-     */
     private static final long LEAKAGE_TRIP_FE_PER_TICK = 32;
     private static final int LEAKAGE_HOLD_TICKS = 10;
 
-    public static final int ANCHOR_A_L = 0;
-    public static final int ANCHOR_A_N = 1;
-    public static final int ANCHOR_A_E = 2;
-    public static final int ANCHOR_B_L = 3;
-    public static final int ANCHOR_B_N = 4;
-    public static final int ANCHOR_B_E = 5;
-
     private final CableTier tier;
-    private final EnergyStorage[] buffers = new EnergyStorage[6];
-    private final WireAnchor[] anchors = new WireAnchor[6];
+    private final EnergyStorage[] buffers = new EnergyStorage[TopAnchorLayout.COUNT];
+    private final WireAnchor[] anchors;
 
     private int overloadTicks;
     private int leakageTicks;
@@ -74,61 +55,41 @@ public class BreakerBlockEntity extends BlockEntity implements WireAnchorOwner {
         super(type, pos, state);
         this.tier = tier;
         int rate = tier.ratedTransfer();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < TopAnchorLayout.COUNT; i++) {
             buffers[i] = new EnergyStorage(rate * 2, rate * 2, rate * 2);
         }
-        // 局部坐标按 FACING=NORTH 时的「左面 X=0、右面 X=1」布置；
-        // anchorWorldPos 中按 FACING 旋转
-        anchors[ANCHOR_A_L] = new WireAnchor(ANCHOR_A_L, Phase.LIVE,    new Vec3(-0.05, 0.75, 0.5));
-        anchors[ANCHOR_A_N] = new WireAnchor(ANCHOR_A_N, Phase.NEUTRAL, new Vec3(-0.05, 0.50, 0.5));
-        anchors[ANCHOR_A_E] = new WireAnchor(ANCHOR_A_E, Phase.EARTH,   new Vec3(-0.05, 0.25, 0.5));
-        anchors[ANCHOR_B_L] = new WireAnchor(ANCHOR_B_L, Phase.LIVE,    new Vec3( 1.05, 0.75, 0.5));
-        anchors[ANCHOR_B_N] = new WireAnchor(ANCHOR_B_N, Phase.NEUTRAL, new Vec3( 1.05, 0.50, 0.5));
-        anchors[ANCHOR_B_E] = new WireAnchor(ANCHOR_B_E, Phase.EARTH,   new Vec3( 1.05, 0.25, 0.5));
+        this.anchors = TopAnchorLayout.createAnchors(tier);
     }
 
     public CableTier tier() { return tier; }
     public long lastFlow() { return lastFlow; }
     public long lastLeakage() { return lastLeakage; }
 
-    private BreakerState currentState() {
-        return getBlockState().getValue(BreakerBlock.STATE);
-    }
+    private BreakerState currentState() { return getBlockState().getValue(BreakerBlock.STATE); }
 
+    /** 仅供旧 BlockState 渲染兼容；语义已退化（顶面 6 柱不分 sideA/B）。 */
     public Direction sideA() { return getBlockState().getValue(BreakerBlock.FACING).getClockWise(); }
     public Direction sideB() { return getBlockState().getValue(BreakerBlock.FACING).getCounterClockWise(); }
 
     @Override
     @Nullable
     public WireAnchor anchor(int index) {
-        return (index < 0 || index >= 6) ? null : anchors[index];
+        return (index < 0 || index >= TopAnchorLayout.COUNT) ? null : anchors[index];
     }
 
-    @Override
-    public int anchorCount() { return 6; }
+    @Override public int anchorCount() { return TopAnchorLayout.COUNT; }
 
     @Override
     public IEnergyStorage anchorBuffer(int index) {
-        if (index < 0 || index >= 6) return null;
+        if (index < 0 || index >= TopAnchorLayout.COUNT) return null;
         if (!currentState().conducts()) return BlockedHandler.INSTANCE;
         return buffers[index];
     }
 
     @Override
     public Vec3 anchorWorldPos(WireAnchor anchor, BlockPos blockPos) {
-        Direction face = getBlockState().getValue(BreakerBlock.FACING);
-        Vec3 lo = anchor.localOffset();
-        double dx = lo.x - 0.5;
-        double dz = lo.z - 0.5;
-        double rx, rz;
-        switch (face) {
-            case NORTH -> { rx = dx; rz = dz; }
-            case SOUTH -> { rx = -dx; rz = -dz; }
-            case EAST  -> { rx = -dz; rz = dx; }
-            case WEST  -> { rx = dz; rz = -dx; }
-            default    -> { rx = dx; rz = dz; }
-        }
-        return new Vec3(blockPos.getX() + 0.5 + rx, blockPos.getY() + lo.y, blockPos.getZ() + 0.5 + rz);
+        Direction facing = getBlockState().getValue(BreakerBlock.FACING);
+        return TopAnchorLayout.worldPos(facing, anchor.localOffset(), blockPos);
     }
 
     public void serverTick() {
@@ -142,26 +103,18 @@ public class BreakerBlockEntity extends BlockEntity implements WireAnchorOwner {
             return;
         }
 
-        long flow = 0;
-        long maxPhaseFlow = 0;
-        long flowPerPhase[] = new long[3];
-        for (int p = 0; p < 3; p++) {
-            int aIdx = p;
-            int bIdx = p + 3;
-            long phaseFlow = transfer(buffers[aIdx], buffers[bIdx]);
-            phaseFlow += transfer(buffers[bIdx], buffers[aIdx]);
-            flowPerPhase[p] = phaseFlow;
-            flow += phaseFlow;
-            if (phaseFlow > maxPhaseFlow) maxPhaseFlow = phaseFlow;
-        }
+        long lFlow = transfer(buffers[TopAnchorLayout.L_IN], buffers[TopAnchorLayout.L_OUT]);
+        long nFlow = transfer(buffers[TopAnchorLayout.N_IN], buffers[TopAnchorLayout.N_OUT]);
+        long eFlow = transfer(buffers[TopAnchorLayout.E_IN], buffers[TopAnchorLayout.E_OUT]);
 
-        lastFlow = flow;
-        // RCD：L 流量与 N 流量之差视作漏电流（基尔霍夫电流定律）。
-        // E 上的流量也算入差额——E 平时为 0，被 RCD 节点（其它机器）注入时不为 0。
-        long leakage = Math.abs(flowPerPhase[0] - flowPerPhase[1]);
+        lastFlow = lFlow + nFlow + eFlow;
+        long maxPhase = Math.max(lFlow, Math.max(nFlow, eFlow));
+
+        // RCD：L 与 N 流量差视作漏电
+        long leakage = Math.abs(lFlow - nFlow);
         lastLeakage = leakage;
 
-        evaluateOverload(level, maxPhaseFlow);
+        evaluateOverload(level, maxPhase);
         evaluateLeakage(level, leakage);
     }
 
@@ -234,24 +187,19 @@ public class BreakerBlockEntity extends BlockEntity implements WireAnchorOwner {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        if (tag.contains(NBT_BUFFER_A_L)) buffers[ANCHOR_A_L].deserializeNBT(registries, tag.get(NBT_BUFFER_A_L));
-        if (tag.contains(NBT_BUFFER_A_N)) buffers[ANCHOR_A_N].deserializeNBT(registries, tag.get(NBT_BUFFER_A_N));
-        if (tag.contains(NBT_BUFFER_A_E)) buffers[ANCHOR_A_E].deserializeNBT(registries, tag.get(NBT_BUFFER_A_E));
-        if (tag.contains(NBT_BUFFER_B_L)) buffers[ANCHOR_B_L].deserializeNBT(registries, tag.get(NBT_BUFFER_B_L));
-        if (tag.contains(NBT_BUFFER_B_N)) buffers[ANCHOR_B_N].deserializeNBT(registries, tag.get(NBT_BUFFER_B_N));
-        if (tag.contains(NBT_BUFFER_B_E)) buffers[ANCHOR_B_E].deserializeNBT(registries, tag.get(NBT_BUFFER_B_E));
+        for (int i = 0; i < TopAnchorLayout.COUNT; i++) {
+            String k = NBT_BUFFER_PREFIX + i;
+            if (tag.contains(k)) buffers[i].deserializeNBT(registries, tag.get(k));
+        }
         overloadTicks = tag.getInt(NBT_OVERLOAD_TICKS);
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put(NBT_BUFFER_A_L, buffers[ANCHOR_A_L].serializeNBT(registries));
-        tag.put(NBT_BUFFER_A_N, buffers[ANCHOR_A_N].serializeNBT(registries));
-        tag.put(NBT_BUFFER_A_E, buffers[ANCHOR_A_E].serializeNBT(registries));
-        tag.put(NBT_BUFFER_B_L, buffers[ANCHOR_B_L].serializeNBT(registries));
-        tag.put(NBT_BUFFER_B_N, buffers[ANCHOR_B_N].serializeNBT(registries));
-        tag.put(NBT_BUFFER_B_E, buffers[ANCHOR_B_E].serializeNBT(registries));
+        for (int i = 0; i < TopAnchorLayout.COUNT; i++) {
+            tag.put(NBT_BUFFER_PREFIX + i, buffers[i].serializeNBT(registries));
+        }
         tag.putInt(NBT_OVERLOAD_TICKS, overloadTicks);
     }
 

@@ -1,5 +1,6 @@
 package com.voltcraft.electric.wire;
 
+import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.Phase;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -9,15 +10,22 @@ import org.jetbrains.annotations.Nullable;
  *
  * 由 {@link WireAnchorOwner}（通常是机器 BlockEntity）通过 {@link WireAnchorOwner#anchor(int)}
  * 暴露。SoftCableEntity 持有两个 {@link WireAnchorRef}（owner BlockPos + anchorIndex），
- * tick 时通过 ref 解析回 owner，再拿到这里的 phase / network 来传输能量。
+ * tick 时通过 ref 解析回 owner，再拿到这里的 phase / tier / network 来传输能量。
  *
  * 局部坐标 {@link #localOffset()} 是相对方块原点（最小角）的偏移，用于贝塞尔渲染端点
  * 落在机器面板上的接线柱位置。
+ *
+ * direction 区分 INPUT / OUTPUT。同 owner 内 in↔in 或 out↔out 不可连；
+ * 软线必须 INPUT↔OUTPUT。
  */
 public final class WireAnchor {
 
+    public enum Direction { INPUT, OUTPUT }
+
     private final int index;
     private final Phase phase;
+    private final CableTier tier;
+    private final Direction direction;
     private final Vec3 localOffset;
 
     /**
@@ -27,15 +35,20 @@ public final class WireAnchor {
     @Nullable
     private Integer connectedEntityId;
 
-    public WireAnchor(int index, Phase phase, Vec3 localOffset) {
+    public WireAnchor(int index, Phase phase, CableTier tier, Direction direction, Vec3 localOffset) {
         this.index = index;
         this.phase = phase;
+        this.tier = tier;
+        this.direction = direction;
         this.localOffset = localOffset;
     }
 
     public int index() { return index; }
-
     public Phase phase() { return phase; }
+    public CableTier tier() { return tier; }
+    public Direction direction() { return direction; }
+    public boolean isInput() { return direction == Direction.INPUT; }
+    public boolean isOutput() { return direction == Direction.OUTPUT; }
 
     /** 接线柱在方块本地坐标系中的位置（0..1）。 */
     public Vec3 localOffset() { return localOffset; }
@@ -57,3 +70,4 @@ public final class WireAnchor {
         this.connectedEntityId = null;
     }
 }
+

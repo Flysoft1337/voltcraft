@@ -55,11 +55,15 @@
   "voltcraft.jade.breaker_state": "State: %s",
   "voltcraft.jade.wiring": "Wiring: %s",
   "entity.voltcraft.soft_cable": "Soft Cable",
-  "item.voltcraft.wire_tool": "Wire Tool",
-  "voltcraft.wire_tool.first_picked": "Anchor [%s] at %s selected. Right-click another to connect.",
-  "voltcraft.wire_tool.same_block": "Cannot connect a wire to the same block.",
-  "voltcraft.wire_tool.phase_mismatch": "Phase mismatch: first %s vs second %s.",
-  "voltcraft.wire_tool.first_taken": "First anchor was taken by another wire. Selection cleared.",
-  "voltcraft.wire_tool.no_free_anchor": "No free anchor on this block.",
-  "voltcraft.wire_tool.connected": "Wire connected (phase %s)."
+  "item.voltcraft.low_voltage_soft_cable": "Low Voltage Soft Cable",
+  "item.voltcraft.medium_voltage_soft_cable": "Medium Voltage Soft Cable",
+  "item.voltcraft.high_voltage_soft_cable": "High Voltage Soft Cable",
+  "item.voltcraft.extra_high_voltage_soft_cable": "Extra High Voltage Soft Cable",
+  "voltcraft.soft_cable.first_picked": "Anchor [%s/%s] @ %s selected. Right-click another to connect.",
+  "voltcraft.soft_cable.same_block": "Cannot connect a wire to the same block.",
+  "voltcraft.soft_cable.phase_mismatch": "Phase mismatch: first %s vs second %s.",
+  "voltcraft.soft_cable.same_direction": "Cannot connect two anchors of the same direction (both IN or both OUT).",
+  "voltcraft.soft_cable.first_taken": "First anchor was taken by another wire. Selection cleared.",
+  "voltcraft.soft_cable.no_anchor": "No matching free anchor (wrong tier or fully occupied).",
+  "voltcraft.soft_cable.connected": "Soft cable connected (phase %s)."
 }

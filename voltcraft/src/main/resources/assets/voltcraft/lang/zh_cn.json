@@ -55,11 +55,15 @@
   "voltcraft.jade.breaker_state": "状态：%s",
   "voltcraft.jade.wiring": "接线：%s",
   "entity.voltcraft.soft_cable": "软线",
-  "item.voltcraft.wire_tool": "接线钳",
-  "voltcraft.wire_tool.first_picked": "已选中接线柱 [%s] @ %s，右键另一处完成连接。",
-  "voltcraft.wire_tool.same_block": "不能在同一个方块上连线。",
-  "voltcraft.wire_tool.phase_mismatch": "相位不匹配：起点 %s 与终点 %s。",
-  "voltcraft.wire_tool.first_taken": "起点接线柱已被其他软线占用，已重置选择。",
-  "voltcraft.wire_tool.no_free_anchor": "这个方块没有空闲接线柱。",
-  "voltcraft.wire_tool.connected": "软线已连接（%s 相）。"
+  "item.voltcraft.low_voltage_soft_cable": "低压软线",
+  "item.voltcraft.medium_voltage_soft_cable": "中压软线",
+  "item.voltcraft.high_voltage_soft_cable": "高压软线",
+  "item.voltcraft.extra_high_voltage_soft_cable": "超高压软线",
+  "voltcraft.soft_cable.first_picked": "已选中接线柱 [%s/%s] @ %s，右键另一处完成连接。",
+  "voltcraft.soft_cable.same_block": "不能在同一个方块上连线。",
+  "voltcraft.soft_cable.phase_mismatch": "相位不匹配：起点 %s 与终点 %s。",
+  "voltcraft.soft_cable.same_direction": "不能连接两个同向（都是输入或都是输出）的接线柱。",
+  "voltcraft.soft_cable.first_taken": "起点接线柱已被其他软线占用，已重置选择。",
+  "voltcraft.soft_cable.no_anchor": "找不到匹配的空闲接线柱（等级不符或已被占用）。",
+  "voltcraft.soft_cable.connected": "软线已连接（%s 相）。"
 }

@@ -2,7 +2,7 @@ package com.voltcraft.blockentity;
 
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.electric.CableTier;
-import com.voltcraft.electric.Phase;
+import com.voltcraft.electric.wire.TopAnchorLayout;
 import com.voltcraft.electric.wire.WireAnchor;
 import com.voltcraft.electric.wire.WireAnchorOwner;
 import net.minecraft.core.BlockPos;
@@ -19,152 +19,142 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 升压变压器（三相重构后）。
+ * 变压器（三相重构 v2）：顶面 6 柱（3 in + 3 out），双向变压。
  *
  * 拓扑：
- *   * FACING（铭牌面）：装饰
- *   * FACING.opposite()（输入面）：低压侧 IEnergyStorage，外部 mod 塞 FE
- *   * UP / FACING.clockWise / FACING.counterClockWise：三个输出接线柱（L/N/E）
- *   * DOWN：底座，无功能
+ *   * 顶面：6 个软线接线柱（L_IN/N_IN/E_IN + L_OUT/N_OUT/E_OUT），按 {@link TopAnchorLayout}
+ *   * 背面（FACING.opposite）：保留单口 IEnergyStorage，兼容外部 mod 直接塞 FE
+ *     接收的电量进入 in 侧 buffer（视作"低压侧虚拟单相输入"）
+ *   * FACING（铭牌面）、底面、左右两个非顶面：装饰
  *
- * 三个输出 anchor 各自持有独立 buffer。serverTick 把 inputBuffer 的电按 1% 损耗扣除后，
- * 平分塞进 L 和 N anchor buffer（E 仅承载漏电流，由 RCD 注入）。
- * 软线 entity tick 时从 anchor buffer 抽电送到对端。
+ * 数据流（双向）：
+ *   每 tick 比较 (in_L+in_N) vs (out_L+out_N)：
+ *     * 哪边能量多就推到对边，差额按 LOSS_RATE=1% 扣损耗
+ *     * E 不参与正常电流；只承载漏电（外部 RCD 注入）
+ *
+ * 单相兼容输入：背面 cap 收到的 FE 全部塞进 inputBuffer，serverTick 把它平分到 in_L 和 in_N，
+ * 然后再由双向逻辑流向 out 侧。
  */
 public class TransformerBlockEntity extends BlockEntity implements WireAnchorOwner {
 
     private static final String NBT_INPUT_BUFFER = "InputBuffer";
-    private static final String NBT_BUFFER_L = "BufferL";
-    private static final String NBT_BUFFER_N = "BufferN";
-    private static final String NBT_BUFFER_E = "BufferE";
+    private static final String NBT_BUFFER_PREFIX = "Buf";
 
     private static final double LOSS_RATE = 0.01;
 
-    /** anchor index 约定。L/N/E 按 1/2/3 排列，0 留给将来可能的低压侧 anchor 扩展。 */
-    public static final int ANCHOR_L = 0;
-    public static final int ANCHOR_N = 1;
-    public static final int ANCHOR_E = 2;
-
     private final CableTier outputTier;
 
+    /** 背面单口 cap 收到的 FE 暂存。每 tick 拆到 in 侧 L/N。 */
     private final EnergyStorage inputBuffer;
-    private final EnergyStorage bufferL;
-    private final EnergyStorage bufferN;
-    private final EnergyStorage bufferE;
 
-    private final WireAnchor anchorL;
-    private final WireAnchor anchorN;
-    private final WireAnchor anchorE;
+    /** 6 个 anchor 各自的 buffer：与 TopAnchorLayout 索引对应。 */
+    private final EnergyStorage[] buffers = new EnergyStorage[TopAnchorLayout.COUNT];
+
+    private final WireAnchor[] anchors;
 
     public TransformerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, CableTier outputTier) {
         super(type, pos, state);
         this.outputTier = outputTier;
         int rate = outputTier.ratedTransfer();
         this.inputBuffer = new EnergyStorage(rate * 8, rate * 4, 0);
-        // 每相输出端 buffer：容量 = 单 tick 额定流量；输入/输出限制同
-        this.bufferL = new EnergyStorage(rate, rate, rate);
-        this.bufferN = new EnergyStorage(rate, rate, rate);
-        this.bufferE = new EnergyStorage(rate, rate, rate);
-        // anchor 本地坐标：方块顶面三个柱子
-        // L 在右上 (0.75, 1.05, 0.5)、N 在左上 (0.25, 1.05, 0.5)、E 在中后 (0.5, 1.05, 0.85)
-        this.anchorL = new WireAnchor(ANCHOR_L, Phase.LIVE, new Vec3(0.75, 1.05, 0.5));
-        this.anchorN = new WireAnchor(ANCHOR_N, Phase.NEUTRAL, new Vec3(0.25, 1.05, 0.5));
-        this.anchorE = new WireAnchor(ANCHOR_E, Phase.EARTH, new Vec3(0.5, 1.05, 0.85));
+        for (int i = 0; i < TopAnchorLayout.COUNT; i++) {
+            buffers[i] = new EnergyStorage(rate, rate, rate);
+        }
+        this.anchors = TopAnchorLayout.createAnchors(outputTier);
     }
 
     public CableTier outputTier() { return outputTier; }
+    public CableTier tier() { return outputTier; }
 
+    /** 背面 IEnergyStorage：接受外部 mod 单相 FE 输入，进 inputBuffer。 */
     public IEnergyStorage inputHandler() { return inputBuffer; }
-
-    /** 暴露给软线 entity 的 anchor buffer 接口。 */
-    public IEnergyStorage anchorBuffer(int anchorIndex) {
-        return switch (anchorIndex) {
-            case ANCHOR_L -> bufferL;
-            case ANCHOR_N -> bufferN;
-            case ANCHOR_E -> bufferE;
-            default -> null;
-        };
-    }
 
     @Override
     @Nullable
     public WireAnchor anchor(int index) {
-        return switch (index) {
-            case ANCHOR_L -> anchorL;
-            case ANCHOR_N -> anchorN;
-            case ANCHOR_E -> anchorE;
-            default -> null;
-        };
+        return (index < 0 || index >= TopAnchorLayout.COUNT) ? null : anchors[index];
+    }
+
+    @Override public int anchorCount() { return TopAnchorLayout.COUNT; }
+
+    @Override
+    public IEnergyStorage anchorBuffer(int index) {
+        if (index < 0 || index >= TopAnchorLayout.COUNT) return null;
+        return buffers[index];
     }
 
     @Override
-    public int anchorCount() { return 3; }
-
-    @Override
     public Vec3 anchorWorldPos(WireAnchor anchor, BlockPos blockPos) {
-        // 顶面三个柱子按 FACING 旋转：水平面内 (x', z') = R(decor)·(localOffset.x-0.5, localOffset.z-0.5) + 0.5
-        Direction decor = getBlockState().getValue(TransformerBlock.FACING);
-        Vec3 lo = anchor.localOffset();
-        double dx = lo.x - 0.5;
-        double dz = lo.z - 0.5;
-        double rx, rz;
-        switch (decor) {
-            case NORTH -> { rx = dx; rz = dz; }
-            case SOUTH -> { rx = -dx; rz = -dz; }
-            case EAST  -> { rx = -dz; rz = dx; }
-            case WEST  -> { rx = dz; rz = -dx; }
-            default    -> { rx = dx; rz = dz; }
-        }
-        return new Vec3(blockPos.getX() + 0.5 + rx, blockPos.getY() + lo.y, blockPos.getZ() + 0.5 + rz);
+        Direction facing = getBlockState().getValue(TransformerBlock.FACING);
+        return TopAnchorLayout.worldPos(facing, anchor.localOffset(), blockPos);
     }
 
     public void serverTick() {
         Level level = getLevel();
         if (level == null || level.isClientSide) return;
 
-        int available = inputBuffer.getEnergyStored();
-        if (available <= 0) return;
+        // 1) 把 inputBuffer 的电平分注入 in_L / in_N（兼容单相外部 mod 输入）
+        int avail = inputBuffer.getEnergyStored();
+        if (avail > 0) {
+            int half = avail / 2;
+            int l = buffers[TopAnchorLayout.L_IN].receiveEnergy(half, false);
+            int n = buffers[TopAnchorLayout.N_IN].receiveEnergy(half, false);
+            inputBuffer.extractEnergy(l + n, false);
+        }
 
-        // 损耗后平分给 L 和 N（E 不主动分配）
-        long afterLoss = (long) (available * (1.0 - LOSS_RATE));
+        // 2) 双向变压：比较 in vs out 总量，从多的一边流向少的一边，扣损耗
+        long inSum  = (long) buffers[TopAnchorLayout.L_IN].getEnergyStored()
+                    + buffers[TopAnchorLayout.N_IN].getEnergyStored();
+        long outSum = (long) buffers[TopAnchorLayout.L_OUT].getEnergyStored()
+                    + buffers[TopAnchorLayout.N_OUT].getEnergyStored();
+        if (inSum > outSum) {
+            transformPair(buffers[TopAnchorLayout.L_IN],  buffers[TopAnchorLayout.L_OUT]);
+            transformPair(buffers[TopAnchorLayout.N_IN],  buffers[TopAnchorLayout.N_OUT]);
+        } else if (outSum > inSum) {
+            transformPair(buffers[TopAnchorLayout.L_OUT], buffers[TopAnchorLayout.L_IN]);
+            transformPair(buffers[TopAnchorLayout.N_OUT], buffers[TopAnchorLayout.N_IN]);
+        }
+        // E 不主动转移（仅承载漏电）
+    }
+
+    /** src→dst 转移并扣 LOSS_RATE 损耗。 */
+    private static void transformPair(EnergyStorage src, EnergyStorage dst) {
+        int avail = src.getEnergyStored();
+        if (avail <= 0) return;
+        int afterLoss = (int) (avail * (1.0 - LOSS_RATE));
         if (afterLoss <= 0) return;
-
-        long perPhase = afterLoss / 2;
-        int pushedL = bufferL.receiveEnergy((int) Math.min(Integer.MAX_VALUE, perPhase), false);
-        int pushedN = bufferN.receiveEnergy((int) Math.min(Integer.MAX_VALUE, perPhase), false);
-
-        long totalPushed = (long) pushedL + pushedN;
-        if (totalPushed <= 0) return;
-
-        int consumed = (int) Math.min(Integer.MAX_VALUE, Math.ceil(totalPushed / (1.0 - LOSS_RATE)));
-        consumed = Math.min(consumed, available);
-        inputBuffer.extractEnergy(consumed, false);
+        int accepted = dst.receiveEnergy(afterLoss, true);
+        if (accepted <= 0) return;
+        // 真实从 src 抽出 accepted/(1-loss) 的电（向上取整）
+        int consumed = (int) Math.min(avail, Math.ceil(accepted / (1.0 - LOSS_RATE)));
+        src.extractEnergy(consumed, false);
+        dst.receiveEnergy(accepted, false);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.contains(NBT_INPUT_BUFFER)) inputBuffer.deserializeNBT(registries, tag.get(NBT_INPUT_BUFFER));
-        if (tag.contains(NBT_BUFFER_L)) bufferL.deserializeNBT(registries, tag.get(NBT_BUFFER_L));
-        if (tag.contains(NBT_BUFFER_N)) bufferN.deserializeNBT(registries, tag.get(NBT_BUFFER_N));
-        if (tag.contains(NBT_BUFFER_E)) bufferE.deserializeNBT(registries, tag.get(NBT_BUFFER_E));
+        for (int i = 0; i < TopAnchorLayout.COUNT; i++) {
+            String k = NBT_BUFFER_PREFIX + i;
+            if (tag.contains(k)) buffers[i].deserializeNBT(registries, tag.get(k));
+        }
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.put(NBT_INPUT_BUFFER, inputBuffer.serializeNBT(registries));
-        tag.put(NBT_BUFFER_L, bufferL.serializeNBT(registries));
-        tag.put(NBT_BUFFER_N, bufferN.serializeNBT(registries));
-        tag.put(NBT_BUFFER_E, bufferE.serializeNBT(registries));
+        for (int i = 0; i < TopAnchorLayout.COUNT; i++) {
+            tag.put(NBT_BUFFER_PREFIX + i, buffers[i].serializeNBT(registries));
+        }
     }
 
-    /** 输入面：FACING 反向。外部机器从这里塞电。 */
+    /** 输入面（外部 mod 塞 FE 的方向）= FACING 反向。 */
     public Direction inputFace() {
         return getBlockState().getValue(TransformerBlock.FACING).getOpposite();
     }
 
-    /** 装饰面方向 = FACING。仅 Jade 用。 */
     public Direction decorFace() {
         return getBlockState().getValue(TransformerBlock.FACING);
     }
