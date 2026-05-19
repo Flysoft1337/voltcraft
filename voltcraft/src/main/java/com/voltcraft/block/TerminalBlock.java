@@ -64,8 +64,14 @@ public class TerminalBlock extends Block implements EntityBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
+        // FACING = 机器面（三色螺丝面），等于玩家右键的方块面的法线方向。
+        // 仅取水平面分量，避免端子顶/底朝玩家。如果点击的是水平面（顶/底），退化为玩家朝向反方向。
+        Direction clicked = context.getClickedFace();
+        Direction facing = clicked.getAxis().isHorizontal()
+                ? clicked
+                : context.getHorizontalDirection().getOpposite();
         return defaultBlockState()
-                .setValue(FACING, context.getHorizontalDirection().getOpposite())
+                .setValue(FACING, facing)
                 .setValue(WIRING, WiringState.CORRECT);
     }
 

@@ -88,16 +88,30 @@ public class BreakerBlock extends Block implements EntityBlock {
         if (level.isClientSide) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof BreakerBlockEntity be) {
             BreakerState cur = state.getValue(STATE);
-            if (cur.isTripped()) {
-                be.reset();
-                level.playSound(null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.6f, 1.4f);
-                if (player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("voltcraft.breaker.reset"), true);
+            switch (cur) {
+                case CLOSED -> {
+                    // 玩家手动拉闸
+                    be.setState(BreakerState.OPEN_MANUAL);
+                    level.playSound(null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.6f, 0.7f);
+                    if (player instanceof ServerPlayer sp) {
+                        sp.displayClientMessage(Component.translatable("voltcraft.breaker.open_manual"), true);
+                    }
                 }
-            } else {
-                // 玩家手动断开（试合）：可选——当前阶段不实现手动跳闸，留空
-                if (player instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(Component.translatable("voltcraft.breaker.already_closed"), true);
+                case OPEN_MANUAL -> {
+                    // 玩家手动合闸
+                    be.reset();
+                    level.playSound(null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.6f, 1.4f);
+                    if (player instanceof ServerPlayer sp) {
+                        sp.displayClientMessage(Component.translatable("voltcraft.breaker.close_manual"), true);
+                    }
+                }
+                default -> {
+                    // 故障跳闸：reset 重新合闸
+                    be.reset();
+                    level.playSound(null, pos, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.6f, 1.4f);
+                    if (player instanceof ServerPlayer sp) {
+                        sp.displayClientMessage(Component.translatable("voltcraft.breaker.reset"), true);
+                    }
                 }
             }
             return InteractionResult.CONSUME;

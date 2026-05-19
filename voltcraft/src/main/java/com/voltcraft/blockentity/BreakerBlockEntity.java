@@ -16,30 +16,37 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * 空开方块实体。
+ * 空气开关方块实体。
  *
- * 跳闸阈值（设计文档 4.2，可调）：
- * - 电流 > 200% 额定 → 立刻跳闸（电磁脱扣模拟）
- * - 电流 > 120% 额定 持续 100 tick → 跳闸（热脱扣模拟）
+ * 拓扑：FACING 是把手朝向（视觉特征）。两侧水平方向是 sideA / sideB，
+ * 各自接同等级电缆网络。
  *
- * 当前阶段把"电流"近似为"通过本空开的 FE/t"。等接线端子完成后，
- * 短路检测会作为独立分支补上。
+ * 双 buffer 跨边推送：
+ *   * bufferA：sideA 网络通过 capA 塞进来的电；serverTick 把它 push 到 sideB 网络
+ *   * bufferB：sideB 网络通过 capB 塞进来的电；serverTick 把它 push 到 sideA 网络
+ * 自循环不可能——每个 buffer 只能推给"另一边"网络。
+ *
+ * 跳闸阈值（设计文档 4.2）：
+ * - 流量 > 200% 额定 → 立刻 TRIPPED_OVERLOAD
+ * - 流量 > 120% 额定 持续 100 tick → TRIPPED_OVERLOAD
+ * 任一侧网络被打 shortCircuitSource → TRIPPED_SHORT。
  */
 public class BreakerBlockEntity extends BlockEntity {
 
-    private static final String NBT_BUFFER = "Buffer";
-    private static final String NBT_STATE = "State";
+    private static final String NBT_BUFFER_A = "BufferA";
+    private static final String NBT_BUFFER_B = "BufferB";
     private static final String NBT_OVERLOAD_TICKS = "OverloadTicks";
 
-    /** 设计文档 4.2 的阈值，后续会迁移到 ModConfigSpec。 */
-    private static final double OVERLOAD_FACTOR_HOLD = 1.20;     // 120%
-    private static final int OVERLOAD_HOLD_TICKS = 100;           // 5s
-    private static final double OVERLOAD_FACTOR_INSTANT = 2.00;  // 200%
+    private static final double OVERLOAD_FACTOR_HOLD = 1.20;
+    private static final int OVERLOAD_HOLD_TICKS = 100;
+    private static final double OVERLOAD_FACTOR_INSTANT = 2.00;
 
     private final CableTier tier;
-    private final EnergyStorage buffer;
+    private final EnergyStorage bufferA;
+    private final EnergyStorage bufferB;
 
     private int overloadTicks;
     private long lastFlow;
@@ -48,87 +55,122 @@ public class BreakerBlockEntity extends BlockEntity {
         super(type, pos, state);
         this.tier = tier;
         int rate = tier.ratedTransfer();
-        // buffer 容量 = 4×rate，输入/输出上限均 = 2×rate（允许瞬时过载，让阈值有意义）
-        this.buffer = new EnergyStorage(rate * 4, rate * 2, rate * 2);
+        // 容量 = 2×rate（过载情况下 1 tick 可瞬时塞 200%），输入/输出上限 = 2×rate
+        this.bufferA = new EnergyStorage(rate * 2, rate * 2, rate * 2);
+        this.bufferB = new EnergyStorage(rate * 2, rate * 2, rate * 2);
     }
 
-    public CableTier tier() {
-        return tier;
-    }
+    public CableTier tier() { return tier; }
 
-    public IEnergyStorage inputHandler() {
-        if (currentState().isTripped()) return BlockedHandler.INSTANCE;
-        return buffer;
-    }
+    public long lastFlow() { return lastFlow; }
 
     private BreakerState currentState() {
         return getBlockState().getValue(BreakerBlock.STATE);
     }
 
-    public Direction outputFace() {
-        return getBlockState().getValue(BreakerBlock.FACING);
+    public Direction sideA() {
+        return getBlockState().getValue(BreakerBlock.FACING).getClockWise();
+    }
+    public Direction sideB() {
+        return getBlockState().getValue(BreakerBlock.FACING).getCounterClockWise();
     }
 
-    public Direction inputFace() {
-        return outputFace().getOpposite();
+    /** sideA 面对外暴露：只 receive 进 bufferA。 */
+    public IEnergyStorage handlerA() {
+        if (!currentState().conducts()) return BlockedHandler.INSTANCE;
+        return capA;
     }
 
-    public long lastFlow() {
-        return lastFlow;
+    /** sideB 面对外暴露：只 receive 进 bufferB。 */
+    public IEnergyStorage handlerB() {
+        if (!currentState().conducts()) return BlockedHandler.INSTANCE;
+        return capB;
     }
+
+    private final IEnergyStorage capA = new IEnergyStorage() {
+        @Override public int receiveEnergy(int maxReceive, boolean simulate) {
+            return bufferA.receiveEnergy(maxReceive, simulate);
+        }
+        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
+        @Override public int getEnergyStored() { return bufferA.getEnergyStored(); }
+        @Override public int getMaxEnergyStored() { return bufferA.getMaxEnergyStored(); }
+        @Override public boolean canExtract() { return false; }
+        @Override public boolean canReceive() { return true; }
+    };
+
+    private final IEnergyStorage capB = new IEnergyStorage() {
+        @Override public int receiveEnergy(int maxReceive, boolean simulate) {
+            return bufferB.receiveEnergy(maxReceive, simulate);
+        }
+        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
+        @Override public int getEnergyStored() { return bufferB.getEnergyStored(); }
+        @Override public int getMaxEnergyStored() { return bufferB.getMaxEnergyStored(); }
+        @Override public boolean canExtract() { return false; }
+        @Override public boolean canReceive() { return true; }
+    };
 
     public void serverTick() {
         Level level = getLevel();
         if (level == null || level.isClientSide) return;
 
         BreakerState state = currentState();
-        if (state.isTripped()) {
+        if (!state.conducts()) {
             lastFlow = 0;
             return;
         }
 
-        // 短路检测：扫描上游（输入面）网络是否被端子打了短路标志
-        Direction inDir = inputFace();
-        BlockPos inPos = getBlockPos().relative(inDir);
-        BlockState inState = level.getBlockState(inPos);
-        if (inState.getBlock() instanceof CableBlock inCable && inCable.tier() == tier) {
-            EnergyNetwork inNet = NetworkManager.get(level).networkAt(inPos);
-            if (inNet != null && inNet.hasShortCircuit()) {
-                trip(level, BreakerState.TRIPPED_SHORT);
-                return;
+        EnergyNetwork netA = networkOnSide(level, sideA());
+        EnergyNetwork netB = networkOnSide(level, sideB());
+
+        // 透传电压标签
+        if (netA != null && netB != null) {
+            if (netA.voltageTag() != null && netB.voltageTag() == null) {
+                netB.setVoltageTag(netA.voltageTag());
+            } else if (netB.voltageTag() != null && netA.voltageTag() == null) {
+                netA.setVoltageTag(netB.voltageTag());
             }
         }
 
-        Direction outDir = outputFace();
-        BlockPos outPos = getBlockPos().relative(outDir);
-        BlockState outState = level.getBlockState(outPos);
-        if (!(outState.getBlock() instanceof CableBlock cb) || cb.tier() != tier) {
-            lastFlow = 0;
-            return;
-        }
-        EnergyNetwork outNet = NetworkManager.get(level).networkAt(outPos);
-        if (outNet == null) return;
-
-        // 下游短路也跳：可能短路源在下游某个端子上
-        if (outNet.hasShortCircuit()) {
+        // 短路检测
+        if ((netA != null && netA.hasShortCircuit()) || (netB != null && netB.hasShortCircuit())) {
             trip(level, BreakerState.TRIPPED_SHORT);
             return;
         }
 
-        // 推 buffer 里的能量到下游电缆网络
-        int available = buffer.getEnergyStored();
-        if (available <= 0) {
-            decayOverload();
-            lastFlow = 0;
-            return;
-        }
-        long pushed = outNet.pushEnergy(available, false);
-        if (pushed > 0) {
-            buffer.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
-        }
-        lastFlow = pushed;
+        long flow = 0;
 
-        evaluateOverload(level, pushed);
+        // bufferA → netB
+        int aAvail = bufferA.getEnergyStored();
+        if (aAvail > 0 && netB != null) {
+            long pushed = netB.pushEnergy(level, aAvail, false);
+            if (pushed > 0) {
+                bufferA.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
+                flow += pushed;
+            }
+        }
+
+        // bufferB → netA
+        int bAvail = bufferB.getEnergyStored();
+        if (bAvail > 0 && netA != null) {
+            long pushed = netA.pushEnergy(level, bAvail, false);
+            if (pushed > 0) {
+                bufferB.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
+                flow += pushed;
+            }
+        }
+
+        lastFlow = flow;
+        evaluateOverload(level, flow);
+    }
+
+    @Nullable
+    private EnergyNetwork networkOnSide(Level level, Direction d) {
+        BlockPos pos = getBlockPos().relative(d);
+        BlockState bs = level.getBlockState(pos);
+        if (bs.getBlock() instanceof CableBlock cb && cb.tier() == tier) {
+            return NetworkManager.get(level).networkAt(pos);
+        }
+        return null;
     }
 
     private void evaluateOverload(Level level, long flow) {
@@ -157,12 +199,11 @@ public class BreakerBlockEntity extends BlockEntity {
         overloadTicks = 0;
         BlockState newState = getBlockState().setValue(BreakerBlock.STATE, reason);
         level.setBlock(getBlockPos(), newState, 3);
-        // 清空 buffer：跳闸后存量电不应继续推送（避免合闸瞬间冲击）
-        buffer.extractEnergy(buffer.getEnergyStored(), false);
+        bufferA.extractEnergy(bufferA.getEnergyStored(), false);
+        bufferB.extractEnergy(bufferB.getEnergyStored(), false);
         setChanged();
     }
 
-    /** 玩家合闸交互入口。 */
     public void reset() {
         Level level = getLevel();
         if (level == null) return;
@@ -172,23 +213,29 @@ public class BreakerBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    public void setState(BreakerState newStateValue) {
+        Level level = getLevel();
+        if (level == null) return;
+        level.setBlock(getBlockPos(), getBlockState().setValue(BreakerBlock.STATE, newStateValue), 3);
+        setChanged();
+    }
+
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        if (tag.contains(NBT_BUFFER)) {
-            buffer.deserializeNBT(registries, tag.get(NBT_BUFFER));
-        }
+        if (tag.contains(NBT_BUFFER_A)) bufferA.deserializeNBT(registries, tag.get(NBT_BUFFER_A));
+        if (tag.contains(NBT_BUFFER_B)) bufferB.deserializeNBT(registries, tag.get(NBT_BUFFER_B));
         overloadTicks = tag.getInt(NBT_OVERLOAD_TICKS);
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put(NBT_BUFFER, buffer.serializeNBT(registries));
+        tag.put(NBT_BUFFER_A, bufferA.serializeNBT(registries));
+        tag.put(NBT_BUFFER_B, bufferB.serializeNBT(registries));
         tag.putInt(NBT_OVERLOAD_TICKS, overloadTicks);
     }
 
-    /** 跳闸时给输入面挂的"假"句柄：什么都不收。 */
     private static final class BlockedHandler implements IEnergyStorage {
         static final BlockedHandler INSTANCE = new BlockedHandler();
         @Override public int receiveEnergy(int maxReceive, boolean simulate) { return 0; }

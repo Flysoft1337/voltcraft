@@ -1,9 +1,13 @@
-# Generates 32x32 placeholder block textures for VoltCraft.
+# Generates 16x16 vanilla-style block textures for VoltCraft.
 # Run: pwsh -File scripts/generate_textures.ps1
 #
 # Outputs to src/main/resources/assets/voltcraft/textures/block/
 #
-# Style: chunky pixel art, voltage-tier colors, simple lighting.
+# Design goals:
+#  * Resolution matches vanilla (16x16) so blocks visually match the rest of the world.
+#  * Palette borrows from real vanilla blocks: coal-black rubber, diamond blue, vanilla orange/red.
+#  * Cables use a black rubber tube with two tier-colored ID rings; only the central band
+#    (texture rows y=6..9) is visible on the in-world thin-arm model.
 
 Add-Type -AssemblyName System.Drawing
 
@@ -11,7 +15,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $out  = Join-Path $root 'src/main/resources/assets/voltcraft/textures/block'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-$SIZE = 32
+$SIZE = 16
 
 function New-Bmp {
     $bmp = New-Object System.Drawing.Bitmap $SIZE, $SIZE, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -56,278 +60,320 @@ function Pixel([System.Drawing.Bitmap]$bmp, [int]$x, [int]$y, [System.Drawing.Co
     }
 }
 
-# Voltage tier color palette (true-ish electrical color codes)
+# Vanilla-aligned palette
+$rubberHi   = Hex '2C2C2C'   # rubber highlight
+$rubberMid  = Hex '161616'   # rubber body (close to coal block)
+$rubberLo   = Hex '050505'   # rubber shadow
+$voidBlack  = Hex '000000'
+
+# Tier colors — picked to read clearly at distance on a 16x16 flat tube,
+# while not colliding with common vanilla blocks of the same hue.
 $tierColors = @{
-    'low'        = @{ main = Hex '6B7280'; accent = Hex '94A3B8'; mark = Hex 'FACC15' }  # gray + yellow stripe (220V neutral)
-    'medium'     = @{ main = Hex '1E3A8A'; accent = Hex '3B82F6'; mark = Hex '93C5FD' }  # navy blue (10kV)
-    'high'       = @{ main = Hex 'B45309'; accent = Hex 'F59E0B'; mark = Hex 'FED7AA' }  # amber/orange (35kV)
-    'extra_high' = @{ main = Hex '7F1D1D'; accent = Hex 'DC2626'; mark = Hex 'FCA5A5' }  # crimson (110kV)
+    'low'        = @{ main = Hex 'C0C0C0'; accent = Hex 'E8E8E8'; lo = Hex '6F6F6F' }   # iron grey (220V)
+    'medium'     = @{ main = Hex '3F76E4'; accent = Hex '6E9EFF'; lo = Hex '274BAA' }   # diamond blue (10kV)
+    'high'       = @{ main = Hex 'F9801D'; accent = Hex 'FFB155'; lo = Hex 'B45A0E' }   # vanilla orange (35kV)
+    'extra_high' = @{ main = Hex 'B02E26'; accent = Hex 'E94B3F'; lo = Hex '7A1B16' }   # vanilla red (110kV)
 }
 
-# === Cables: braided cable cross-section style ===
-# Center bundle of 3 strands (hot/neutral/ground), insulated outer ring.
+# === CABLES ===
+# Texture is split into three UV-sampled regions matching the arm/core models:
+#   * Side strips (along arm length): black rubber sheath with a tier-colored
+#     identification line running parallel to the cable axis. Multi-arm cables
+#     stay seamless because every arm samples the same axial slice.
+#   * Cross-section (4x4 center): the visible "cable end" — three insulated
+#     conductors (hot/neutral/ground) embedded in black rubber.
+# Outside the strips the texture is filled with rubber so the inventory cube_all
+# preview reads as "a piece of cable" (rubber background with a tier cross).
 function Make-Cable($tier) {
     $c = $tierColors[$tier]
     $bmp = New-Bmp
-    Fill $bmp (Hex '141414')
-    # outer insulation
-    Rect $bmp 4 4 24 24 $c.main
-    # inner conductor area (darker)
-    Rect $bmp 8 8 16 16 (Hex '0F172A')
-    # 3 conductor dots: hot (red), neutral (blue), ground (yellow/green)
-    Rect $bmp 10 10 4 4 (Hex 'EF4444')   # hot
-    Rect $bmp 18 10 4 4 (Hex '3B82F6')   # neutral
-    Rect $bmp 14 18 4 4 (Hex 'EAB308')   # ground
-    # tier accent stripes top + bottom (so adjacent cables show banding)
-    Rect $bmp 4 4 24 2 $c.accent
-    Rect $bmp 4 26 24 2 $c.accent
-    # tier mark dot top-left corner for instant identification
-    Rect $bmp 1 1 3 3 $c.mark
+
+    # All-black rubber base (the insulation jacket)
+    Fill $bmp $rubberMid
+
+    # Horizontal sheath band y=6..9 (east/west arm sides sample x=0..5)
+    Rect $bmp 0 6 16 1 $rubberHi    # top highlight
+    Rect $bmp 0 7 16 1 $c.main      # tier-color identification line
+    Rect $bmp 0 8 16 1 $rubberMid   # body
+    Rect $bmp 0 9 16 1 $rubberLo    # bottom shadow
+
+    # Vertical sheath band x=6..9 (up/down arm sides sample y=0..5)
+    Rect $bmp 6 0 1 16 $rubberHi
+    Rect $bmp 7 0 1 16 $c.main
+    Rect $bmp 8 0 1 16 $rubberMid
+    Rect $bmp 9 0 1 16 $rubberLo
+
+    # Cross-section panel x=6..9, y=6..9 (overrides the strip intersection)
+    # Black rubber, with three conductor strands packed in the corners.
+    Rect $bmp 6 6 4 4 $rubberLo
+    Pixel $bmp 7 7 (Hex 'EF4444')   # hot — red
+    Pixel $bmp 8 7 (Hex '3F76E4')   # neutral — blue
+    Pixel $bmp 7 8 (Hex 'EAB308')   # ground — yellow
+    Pixel $bmp 8 8 $c.accent        # tier indicator dot
+
     Save-Bmp $bmp "${tier}_voltage_cable"
 }
-
 foreach ($t in @('low','medium','high','extra_high')) { Make-Cable $t }
 
-# === Transformer: front (input/output indicator), side (cooling fins), top (insulators) ===
-$transformerBody = Hex '4B5563'
-$transformerDark = Hex '1F2937'
-$transformerHi   = Hex '9CA3AF'
+# === TRANSFORMER ===
+$tBody = Hex '6B6B6B'   # cobblestone-ish grey
+$tHi   = Hex '8C8C8C'
+$tLo   = Hex '3E3E3E'
+$tDark = Hex '1A1A1A'
+
+function Bevel([System.Drawing.Bitmap]$bmp, [System.Drawing.Color]$hi, [System.Drawing.Color]$lo) {
+    Rect $bmp 0 0 16 1 $hi
+    Rect $bmp 0 0 1 16 $hi
+    Rect $bmp 0 15 16 1 $lo
+    Rect $bmp 15 0 1 16 $lo
+}
 
 function Make-TransformerFront($tier) {
     $c = $tierColors[$tier]
     $bmp = New-Bmp
-    Fill $bmp $transformerBody
-    # outer bevel
-    Rect $bmp 0 0 32 1 $transformerHi
-    Rect $bmp 0 0 1 32 $transformerHi
-    Rect $bmp 0 31 32 1 $transformerDark
-    Rect $bmp 31 0 1 32 $transformerDark
-    # warning sign frame
-    Rect $bmp 6 6 20 20 $transformerDark
-    # voltage tier color block (the "label")
-    Rect $bmp 8 8 16 12 $c.main
-    Rect $bmp 8 8 16 2 $c.accent
-    Rect $bmp 8 18 16 2 $c.accent
-    # zigzag lightning bolt
-    Pixel $bmp 14 11 $c.mark
-    Pixel $bmp 15 11 $c.mark
-    Pixel $bmp 13 12 $c.mark
-    Pixel $bmp 14 12 $c.mark
-    Pixel $bmp 14 13 $c.mark
-    Pixel $bmp 15 13 $c.mark
-    Pixel $bmp 16 13 $c.mark
-    Pixel $bmp 14 14 $c.mark
-    Pixel $bmp 15 14 $c.mark
-    Pixel $bmp 16 14 $c.mark
-    Pixel $bmp 17 14 $c.mark
-    Pixel $bmp 16 15 $c.mark
-    Pixel $bmp 17 15 $c.mark
-    Pixel $bmp 17 16 $c.mark
-    # output port at bottom (where cable attaches)
-    Rect $bmp 14 22 4 4 (Hex '111827')
-    Rect $bmp 15 23 2 2 $c.accent
+    Fill $bmp $tBody
+    Bevel $bmp $tHi $tLo
+
+    # Tier band along the top
+    Rect $bmp 2 2 12 1 $c.accent
+    Rect $bmp 2 3 12 2 $c.main
+    Rect $bmp 2 5 12 1 $c.lo
+
+    # Recessed lightning panel
+    Rect $bmp 4 7 8 6 $tDark
+    Rect $bmp 5 8 6 4 (Hex '262626')
+
+    # Lightning bolt (5 pixels, vanilla style)
+    $bolt = Hex 'FFE066'
+    Pixel $bmp 8 8 $bolt
+    Pixel $bmp 7 9 $bolt
+    Pixel $bmp 8 9 $bolt
+    Pixel $bmp 8 10 $bolt
+    Pixel $bmp 9 10 $bolt
+    Pixel $bmp 7 11 $bolt
+
+    # Output port at bottom edge
+    Rect $bmp 6 13 4 2 $tDark
+    Pixel $bmp 7 14 $c.main
+    Pixel $bmp 8 14 $c.main
+
     Save-Bmp $bmp "${tier}_voltage_transformer_front"
 }
 
 function Make-TransformerSide($tier) {
     $c = $tierColors[$tier]
     $bmp = New-Bmp
-    Fill $bmp $transformerBody
-    # bevel
-    Rect $bmp 0 0 32 1 $transformerHi
-    Rect $bmp 0 0 1 32 $transformerHi
-    Rect $bmp 0 31 32 1 $transformerDark
-    Rect $bmp 31 0 1 32 $transformerDark
-    # cooling fins: vertical bars
-    for ($x = 4; $x -lt 28; $x += 4) {
-        Rect $bmp $x 6 2 20 $transformerDark
-        Rect $bmp ($x + 1) 6 1 20 $transformerHi
+    Fill $bmp $tBody
+    Bevel $bmp $tHi $tLo
+
+    # Tier band top
+    Rect $bmp 2 2 12 1 $c.accent
+    Rect $bmp 2 3 12 1 $c.main
+
+    # Cooling fins: 4 vertical bars
+    for ($x = 3; $x -lt 14; $x += 3) {
+        Rect $bmp $x 5 1 9 $tLo
+        Rect $bmp ($x + 1) 5 1 9 $tDark
     }
-    # tier color band along the top
-    Rect $bmp 2 2 28 2 $c.main
+
     Save-Bmp $bmp "${tier}_voltage_transformer_side"
+}
+
+# Transformer back = low-voltage FE input port (no tier band — accepts any FE)
+function Make-TransformerBack($tier) {
+    $bmp = New-Bmp
+    Fill $bmp $tBody
+    Bevel $bmp $tHi $tLo
+
+    # "FE IN" copper port: large recessed square
+    Rect $bmp 3 3 10 10 $tDark
+    Rect $bmp 4 4 8 8 (Hex 'B87333')      # copper plate
+    Rect $bmp 5 5 6 6 (Hex 'D69453')      # copper highlight
+    # 4 hex-bolt corners
+    foreach ($p in @(@(4,4), @(11,4), @(4,11), @(11,11))) {
+        Pixel $bmp $p[0] $p[1] (Hex '8A4D1A')
+    }
+    # Center "+" jack
+    Pixel $bmp 7 8 $tDark
+    Pixel $bmp 8 8 $tDark
+    Pixel $bmp 7 7 $tDark
+    Pixel $bmp 8 7 $tDark
+    Save-Bmp $bmp "${tier}_voltage_transformer_back"
 }
 
 foreach ($t in @('low','medium','high','extra_high')) {
     Make-TransformerFront $t
     Make-TransformerSide $t
+    Make-TransformerBack $t
 }
 
 # Shared transformer top: 4 ceramic insulators
 $bmp = New-Bmp
-Fill $bmp $transformerBody
-# bevel
-Rect $bmp 0 0 32 1 $transformerHi
-Rect $bmp 0 0 1 32 $transformerHi
-Rect $bmp 0 31 32 1 $transformerDark
-Rect $bmp 31 0 1 32 $transformerDark
-# 4 insulator dots arranged in 2x2 with disc shading
-$insulatorPositions = @(@(8,8), @(20,8), @(8,20), @(20,20))
-foreach ($p in $insulatorPositions) {
+Fill $bmp $tBody
+Bevel $bmp $tHi $tLo
+foreach ($p in @(@(4,4), @(10,4), @(4,10), @(10,10))) {
     $px = $p[0]; $py = $p[1]
-    # disc body
-    Rect $bmp $px $py 4 4 (Hex 'D1D5DB')
-    Rect $bmp ($px+1) ($py+1) 2 2 (Hex 'F3F4F6')
-    Rect $bmp ($px+3) ($py+3) 1 1 (Hex '6B7280')
+    Rect $bmp $px $py 2 2 (Hex 'D4D4D4')
+    Pixel $bmp $px $py (Hex 'F2F2F2')
+    Pixel $bmp ($px + 1) ($py + 1) (Hex '8A8A8A')
 }
-# central oil-cooler crosshatch
-Rect $bmp 13 13 6 6 $transformerDark
-Rect $bmp 14 14 4 4 (Hex '111827')
+# Central oil cooler
+Rect $bmp 7 7 2 2 $tDark
 Save-Bmp $bmp 'transformer_top'
 
-# === Breaker: faceplate with toggle handle (closed/tripped per tier) ===
-$breakerBody = Hex '374151'
-$breakerHi   = Hex '6B7280'
-$breakerDark = Hex '111827'
+# === BREAKER ===
+$bBody = Hex '4A4A4A'
+$bHi   = Hex '6E6E6E'
+$bLo   = Hex '262626'
+$bDark = Hex '111111'
 
-function Make-BreakerFront($tier, $tripped) {
+function Make-BreakerFront($tier, $stateName) {
     $c = $tierColors[$tier]
     $bmp = New-Bmp
-    Fill $bmp $breakerBody
-    # bevel
-    Rect $bmp 0 0 32 1 $breakerHi
-    Rect $bmp 0 0 1 32 $breakerHi
-    Rect $bmp 0 31 32 1 $breakerDark
-    Rect $bmp 31 0 1 32 $breakerDark
-    # tier strip top
-    Rect $bmp 2 2 28 3 $c.main
-    Rect $bmp 2 2 28 1 $c.accent
-    # central toggle slot (recessed)
-    Rect $bmp 10 8 12 18 $breakerDark
-    Rect $bmp 11 9 10 16 (Hex '1F2937')
+    Fill $bmp $bBody
+    Bevel $bmp $bHi $bLo
 
-    if ($tripped) {
-        # red OFF indicator + handle pushed up
-        # status light
-        Rect $bmp 12 10 8 4 (Hex '7F1D1D')
-        Rect $bmp 13 11 6 2 (Hex 'EF4444')
-        # handle in upper position with red end
-        Rect $bmp 14 16 4 8 (Hex 'B91C1C')
-        Rect $bmp 14 16 4 2 (Hex 'FECACA')  # highlight on top of handle
-        # small "I/O" label (here just a dash to indicate OFF)
-        Pixel $bmp 15 25 (Hex 'FCA5A5')
-        Pixel $bmp 16 25 (Hex 'FCA5A5')
+    # Tier band top
+    Rect $bmp 2 2 12 1 $c.accent
+    Rect $bmp 2 3 12 1 $c.main
+
+    # Recessed toggle slot
+    Rect $bmp 5 5 6 9 $bDark
+    Rect $bmp 6 6 4 7 (Hex '1F1F1F')
+
+    if ($stateName -eq 'tripped') {
+        # Red fault light + handle up + red handle
+        Rect $bmp 6 6 4 2 (Hex '7F1D1D')
+        Pixel $bmp 7 7 (Hex 'FF4747')
+        Pixel $bmp 8 7 (Hex 'FF4747')
+        Rect $bmp 7 8 2 4 (Hex 'B91C1C')
+        Pixel $bmp 7 8 (Hex 'FECACA')
+        Pixel $bmp 8 8 (Hex 'FECACA')
+    } elseif ($stateName -eq 'open') {
+        # Manual open: grey light + handle up + neutral grey handle
+        Rect $bmp 6 6 4 2 (Hex '3F3F46')
+        Pixel $bmp 7 7 (Hex 'A1A1AA')
+        Pixel $bmp 8 7 (Hex 'A1A1AA')
+        Rect $bmp 7 8 2 4 (Hex '6B7280')
+        Pixel $bmp 7 8 (Hex 'D4D4D8')
+        Pixel $bmp 8 8 (Hex 'D4D4D8')
     } else {
-        # green ON indicator + handle pushed down
-        Rect $bmp 12 10 8 4 (Hex '14532D')
-        Rect $bmp 13 11 6 2 (Hex '22C55E')
-        # handle in lower position with green-ish neutral
-        Rect $bmp 14 16 4 8 (Hex '4B5563')
-        Rect $bmp 14 22 4 2 (Hex 'BBF7D0')  # highlight at bottom
-        Pixel $bmp 16 25 (Hex 'D1FAE5')
+        # Closed: green light + handle down
+        Rect $bmp 6 6 4 2 (Hex '14532D')
+        Pixel $bmp 7 7 (Hex '4ADE80')
+        Pixel $bmp 8 7 (Hex '4ADE80')
+        Rect $bmp 7 9 2 4 (Hex '52525B')
+        Pixel $bmp 7 12 (Hex 'BBF7D0')
+        Pixel $bmp 8 12 (Hex 'BBF7D0')
     }
-    Save-Bmp $bmp "${tier}_voltage_breaker_$(if($tripped){'tripped'}else{'closed'})"
+
+    Save-Bmp $bmp "${tier}_voltage_breaker_${stateName}"
 }
 
 foreach ($t in @('low','medium','high','extra_high')) {
-    Make-BreakerFront $t $false
-    Make-BreakerFront $t $true
+    Make-BreakerFront $t 'closed'
+    Make-BreakerFront $t 'tripped'
+    Make-BreakerFront $t 'open'
 }
 
-# Shared breaker top + side
+# Breaker back = output side (cable jack with tier-color ring)
+function Make-BreakerBack($tier) {
+    $c = $tierColors[$tier]
+    $bmp = New-Bmp
+    Fill $bmp $bBody
+    Bevel $bmp $bHi $bLo
+
+    # Tier band top
+    Rect $bmp 2 2 12 1 $c.accent
+    Rect $bmp 2 3 12 1 $c.main
+
+    # Cable jack (round-ish recessed)
+    Rect $bmp 5 6 6 6 $bDark
+    Rect $bmp 6 7 4 4 $c.lo               # tier color ring
+    Rect $bmp 7 8 2 2 (Hex '0A0A0A')      # inner hole
+
+    # Tiny "OUT" mark dots below
+    Pixel $bmp 6 13 (Hex 'A0A0A0')
+    Pixel $bmp 8 13 (Hex 'A0A0A0')
+    Pixel $bmp 10 13 (Hex 'A0A0A0')
+    Save-Bmp $bmp "${tier}_voltage_breaker_back"
+}
+
+foreach ($t in @('low','medium','high','extra_high')) {
+    Make-BreakerBack $t
+}
+
+# Shared breaker top
 $bmp = New-Bmp
-Fill $bmp $breakerBody
-Rect $bmp 0 0 32 1 $breakerHi
-Rect $bmp 0 0 1 32 $breakerHi
-Rect $bmp 0 31 32 1 $breakerDark
-Rect $bmp 31 0 1 32 $breakerDark
-# row of small terminal screws
-for ($x = 6; $x -lt 28; $x += 6) {
-    Rect $bmp $x 8 4 4 (Hex 'D1D5DB')
-    Rect $bmp ($x+1) 9 2 2 (Hex '4B5563')
-    Rect $bmp $x 20 4 4 (Hex 'D1D5DB')
-    Rect $bmp ($x+1) 21 2 2 (Hex '4B5563')
+Fill $bmp $bBody
+Bevel $bmp $bHi $bLo
+# 4 terminal screws
+foreach ($p in @(@(3,4), @(10,4), @(3,10), @(10,10))) {
+    $px = $p[0]; $py = $p[1]
+    Rect $bmp $px $py 3 3 (Hex 'C7C7C7')
+    Pixel $bmp ($px + 1) ($py + 1) $bLo
 }
 Save-Bmp $bmp 'breaker_top'
 
+# Shared breaker side (mounting groove)
 $bmp = New-Bmp
-Fill $bmp $breakerBody
-Rect $bmp 0 0 32 1 $breakerHi
-Rect $bmp 0 0 1 32 $breakerHi
-Rect $bmp 0 31 32 1 $breakerDark
-Rect $bmp 31 0 1 32 $breakerDark
-# vertical mounting groove
-Rect $bmp 14 4 4 24 $breakerDark
-Rect $bmp 15 4 2 24 (Hex '1F2937')
-# screw heads top + bottom
-Rect $bmp 14 4 4 4 (Hex 'D1D5DB')
-Rect $bmp 14 24 4 4 (Hex 'D1D5DB')
-Pixel $bmp 15 5 (Hex '4B5563')
-Pixel $bmp 16 6 (Hex '4B5563')
-Pixel $bmp 15 25 (Hex '4B5563')
-Pixel $bmp 16 26 (Hex '4B5563')
+Fill $bmp $bBody
+Bevel $bmp $bHi $bLo
+Rect $bmp 7 2 2 12 $bDark
+Pixel $bmp 7 3 (Hex 'C7C7C7')
+Pixel $bmp 8 12 (Hex 'C7C7C7')
 Save-Bmp $bmp 'breaker_side'
 
-# === Terminal: 3 colored screw posts (hot/neutral/ground) on a faceplate ===
-$terminalBody = Hex '475569'
-$terminalHi   = Hex '94A3B8'
-$terminalDark = Hex '0F172A'
+# === TERMINAL ===
+$tmBody = Hex '52525B'
+$tmHi   = Hex '7A7A85'
+$tmLo   = Hex '2D2D33'
+$tmDark = Hex '111111'
 
 function Make-TerminalFront($tier, $state) {
     $c = $tierColors[$tier]
     $bmp = New-Bmp
-    Fill $bmp $terminalBody
-    # bevel
-    Rect $bmp 0 0 32 1 $terminalHi
-    Rect $bmp 0 0 1 32 $terminalHi
-    Rect $bmp 0 31 32 1 $terminalDark
-    Rect $bmp 31 0 1 32 $terminalDark
-    # tier strip top
-    Rect $bmp 2 2 28 3 $c.main
-    Rect $bmp 2 2 28 1 $c.accent
-    # 3 screw posts L (hot=red), N (neutral=blue), E (ground=yellow/green)
-    # base color depends on state
-    $hotColor    = Hex 'EF4444'
-    $neutralColor= Hex '3B82F6'
-    $groundColor = Hex 'EAB308'
-    if ($state -eq 'fault') {
-        # MISSING_GROUND or HOT_NEUTRAL_SWAPPED: ground or hot/neutral darkened
-        $groundColor = Hex '4B5563'    # ground "missing"
-    } elseif ($state -eq 'short') {
-        # SHORT: cross wire visible between hot and neutral/ground (red overlay)
-        $hotColor = Hex 'B91C1C'
-        $neutralColor = Hex '7F1D1D'
-    }
-    # 3 posts, evenly spaced
-    $posY = 14
-    $posL = 6
-    $posN = 14
-    $posE = 22
-    # screw caps with tiny center divot
-    function DrawPost([int]$x, [int]$y, [System.Drawing.Color]$col) {
-        Rect $bmp $x $y 6 8 $terminalDark
-        Rect $bmp ($x+1) ($y+1) 4 6 $col
-        Pixel $bmp ($x+2) ($y+3) $terminalDark
-        Pixel $bmp ($x+3) ($y+3) $terminalDark
-        Pixel $bmp ($x+2) ($y+4) $terminalDark
-        Pixel $bmp ($x+3) ($y+4) $terminalDark
-    }
-    DrawPost $posL $posY $hotColor
-    DrawPost $posN $posY $neutralColor
-    DrawPost $posE $posY $groundColor
-    # post labels
-    Rect $bmp ($posL+1) 9 4 1 (Hex 'F8FAFC')
-    Rect $bmp ($posN+1) 9 4 1 (Hex 'F8FAFC')
-    Rect $bmp ($posE+1) 9 4 1 (Hex 'F8FAFC')
+    Fill $bmp $tmBody
+    Bevel $bmp $tmHi $tmLo
 
-    if ($state -eq 'short') {
-        # red diagonal "danger" stripe across the face
-        for ($i = 0; $i -lt 32; $i++) {
-            Pixel $bmp $i ((28 - $i) % 32) (Hex 'EF4444')
-        }
-    }
+    # Tier band top
+    Rect $bmp 2 2 12 1 $c.accent
+    Rect $bmp 2 3 12 1 $c.main
+
+    # Three screw posts: hot (red, x=3), neutral (blue, x=7), ground (yellow, x=11)
+    $hot     = Hex 'EF4444'
+    $neutral = Hex '3F76E4'
+    $ground  = Hex 'FACC15'
+
     if ($state -eq 'fault') {
-        # yellow warning triangle small in corner
-        Pixel $bmp 26 26 (Hex 'FACC15')
-        Pixel $bmp 25 27 (Hex 'FACC15')
-        Pixel $bmp 27 27 (Hex 'FACC15')
-        Pixel $bmp 24 28 (Hex 'FACC15')
-        Pixel $bmp 25 28 (Hex 'FACC15')
-        Pixel $bmp 26 28 (Hex 'FACC15')
-        Pixel $bmp 27 28 (Hex 'FACC15')
-        Pixel $bmp 28 28 (Hex 'FACC15')
-        Pixel $bmp 26 27 (Hex '111827')
+        $ground = Hex '4B5563'   # ground "missing" — greyed
+    } elseif ($state -eq 'short') {
+        $hot     = Hex 'B91C1C'
+        $neutral = Hex '7F1D1D'
     }
+
+    foreach ($post in @(@(3,$hot), @(7,$neutral), @(11,$ground))) {
+        $x = $post[0]; $col = $post[1]
+        Rect $bmp $x 7 2 4 $tmDark
+        Pixel $bmp $x 7 $col
+        Pixel $bmp ($x + 1) 7 $col
+        Pixel $bmp ($x + 1) 9 $tmHi
+    }
+
+    # State indicators
+    if ($state -eq 'short') {
+        # diagonal red danger stripe
+        for ($i = 5; $i -lt 14; $i++) {
+            Pixel $bmp $i (18 - $i) (Hex 'EF4444')
+        }
+    } elseif ($state -eq 'fault') {
+        # small yellow warning triangle in bottom-right
+        Pixel $bmp 13 12 (Hex 'FACC15')
+        Pixel $bmp 12 13 (Hex 'FACC15')
+        Pixel $bmp 13 13 (Hex '111827')
+        Pixel $bmp 14 13 (Hex 'FACC15')
+    }
+
     Save-Bmp $bmp "${tier}_voltage_terminal_$state"
 }
 
@@ -337,28 +383,43 @@ foreach ($t in @('low','medium','high','extra_high')) {
     Make-TerminalFront $t 'short'
 }
 
-# Shared terminal top + side
+# Terminal back = cable side (a single cable jack with tier color)
+function Make-TerminalBack($tier) {
+    $c = $tierColors[$tier]
+    $bmp = New-Bmp
+    Fill $bmp $tmBody
+    Bevel $bmp $tmHi $tmLo
+
+    # Tier band top
+    Rect $bmp 2 2 12 1 $c.accent
+    Rect $bmp 2 3 12 1 $c.main
+
+    # Cable jack centered
+    Rect $bmp 5 6 6 6 $tmDark
+    Rect $bmp 6 7 4 4 $c.lo
+    Rect $bmp 7 8 2 2 (Hex '0A0A0A')
+    Save-Bmp $bmp "${tier}_voltage_terminal_back"
+}
+
+foreach ($t in @('low','medium','high','extra_high')) {
+    Make-TerminalBack $t
+}
+
+# Shared terminal top: 3 cable entry holes
 $bmp = New-Bmp
-Fill $bmp $terminalBody
-Rect $bmp 0 0 32 1 $terminalHi
-Rect $bmp 0 0 1 32 $terminalHi
-Rect $bmp 0 31 32 1 $terminalDark
-Rect $bmp 31 0 1 32 $terminalDark
-# 3 small holes for cable entry on top
-Rect $bmp 8 12 4 8 $terminalDark
-Rect $bmp 14 12 4 8 $terminalDark
-Rect $bmp 20 12 4 8 $terminalDark
+Fill $bmp $tmBody
+Bevel $bmp $tmHi $tmLo
+Rect $bmp 3 6 2 4 $tmDark
+Rect $bmp 7 6 2 4 $tmDark
+Rect $bmp 11 6 2 4 $tmDark
 Save-Bmp $bmp 'terminal_top'
 
+# Shared terminal side: mounting bracket
 $bmp = New-Bmp
-Fill $bmp $terminalBody
-Rect $bmp 0 0 32 1 $terminalHi
-Rect $bmp 0 0 1 32 $terminalHi
-Rect $bmp 0 31 32 1 $terminalDark
-Rect $bmp 31 0 1 32 $terminalDark
-# horizontal mounting bracket
-Rect $bmp 4 14 24 4 $terminalDark
-Rect $bmp 5 15 22 2 (Hex '1F2937')
+Fill $bmp $tmBody
+Bevel $bmp $tmHi $tmLo
+Rect $bmp 2 7 12 2 $tmDark
+Rect $bmp 3 8 10 1 (Hex '1A1A1A')
 Save-Bmp $bmp 'terminal_side'
 
 Write-Host ""

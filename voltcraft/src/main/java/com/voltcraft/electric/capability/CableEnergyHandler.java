@@ -27,7 +27,9 @@ public final class CableEnergyHandler implements IEnergyStorage {
     public int receiveEnergy(int maxReceive, boolean simulate) {
         EnergyNetwork net = network();
         if (net == null || net.voltageTag() == null) return 0;
-        long accepted = net.pushEnergy(maxReceive, simulate);
+        var level = owner.getLevel();
+        if (level == null) return 0;
+        long accepted = net.pushEnergy(level, maxReceive, simulate);
         return (int) Math.min(accepted, Integer.MAX_VALUE);
     }
 

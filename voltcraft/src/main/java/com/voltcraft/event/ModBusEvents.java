@@ -40,23 +40,30 @@ public final class ModBusEvents {
                 }
         );
 
-        // 空开仅在输入面暴露；跳闸时返回 BlockedHandler 拒收
+        // 空开：sideA / sideB 各自暴露独立 cap，仅 receive 进自己的 buffer。
+        // serverTick 把 bufferA push 给 sideB 网络、bufferB push 给 sideA 网络——
+        // 跨边推送，物理上不可能形成自循环。
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.BREAKER.get(),
                 (BreakerBlockEntity be, Direction side) -> {
-                    if (side == null) return be.inputHandler();
-                    return side == be.inputFace() ? be.inputHandler() : null;
+                    if (side == null) return be.handlerA();
+                    if (side == be.sideA()) return be.handlerA();
+                    if (side == be.sideB()) return be.handlerB();
+                    return null;
                 }
         );
 
-        // 接线端子仅在机器面暴露；短路时拒收
+        // 接线端子双 cap：
+        //   * 机器面 (FACING)：splitHandler——receive→outgoing、extract→incoming（外部机器双向）
+        //   * 其余 5 面：cableSideHandler——只 receive 进 incoming（网络分发）
+        //   incoming 不能被推回网络（只能被机器 extract），所以不会自循环。
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.TERMINAL.get(),
                 (TerminalBlockEntity be, Direction side) -> {
                     if (side == null) return be.machineHandler();
-                    return side == be.machineFace() ? be.machineHandler() : null;
+                    return side == be.machineFace() ? be.machineHandler() : be.cableHandler();
                 }
         );
     }

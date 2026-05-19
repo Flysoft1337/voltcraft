@@ -49,6 +49,12 @@ public final class EnergyNetwork {
     /** 上一 tick 实际通过网络的 FE 流量。用于电流推算。 */
     private long lastFlow;
 
+    /** 本 tick 已被 pullEnergy 拿走的 FE，distributeTick 末尾合入 lastFlow。 */
+    private long pulledThisTick;
+
+    /** 本 tick 已注入但未分发的 FE。供空开/端子 pullEnergy 透视上游。 */
+    public long pendingInput() { return pendingInput; }
+
     public EnergyNetwork(CableTier cableTier) {
         this.cableTier = cableTier;
     }
@@ -96,17 +102,77 @@ public final class EnergyNetwork {
     }
 
     /**
-     * 由变压器/储能调用，向网络注入 FE。受电缆等级 ratedTransfer 上限约束。
-     * 当前 tick 累计的输入会在 distributeTick 中分发。
+     * 由变压器/储能/端子调用，向网络注入 FE。
+     *
+     * 上限有两层：
+     *   1. 电缆等级 ratedTransfer（本 tick 通过整网的 FE/t 总额）
+     *   2. 下游消费者剩余可吸收量（simulate receive 累加）—— 防止消费者满后还在抽源头
+     *
+     * 取两者较小值。这样发电机在下游全满时不会被持续抽空。
      *
      * @return 实际接受的 FE 数量
      */
-    public long pushEnergy(long amount, boolean simulate) {
+    public long pushEnergy(Level level, long amount, boolean simulate) {
         if (amount <= 0) return 0;
-        long capacity = (long) cableTier.ratedTransfer() - pendingInput;
+        long cableCap = (long) cableTier.ratedTransfer() - pendingInput;
+        if (cableCap <= 0) return 0;
+
+        long sinkCap = simulateSinkHeadroom(level);
+        long capacity = Math.min(cableCap, Math.max(0, sinkCap - pendingInput));
         long accepted = Math.max(0, Math.min(amount, capacity));
         if (!simulate) pendingInput += accepted;
         return accepted;
+    }
+
+    /**
+     * 由端子等内部模块从网络拉电。语义：从本 tick 已注入的 pendingInput 里直接取走，
+     * 这部分电相当于"绕过 distributeTick 的下发，提前从生产者侧分流给端子"。
+     *
+     * 只有 pendingInput 里的电才能被 pull——外部第三方机器作为生产者也通过电缆 cap 走 push 路径，
+     * 所以这条接口对所有上游统一。
+     *
+     * @return 实际抽到的 FE 数量
+     */
+    public long pullEnergy(Level level, long amount, boolean simulate) {
+        if (amount <= 0) return 0;
+        long taken = Math.min(amount, pendingInput);
+        if (taken <= 0) return 0;
+        if (!simulate) {
+            pendingInput -= taken;
+            pulledThisTick += taken;
+        }
+        return taken;
+    }
+
+    /** 不带状态地扫描所有消费者的 simulate-receive 上限。用于反压。 */
+    private long simulateSinkHeadroom(Level level) {
+        if (level == null) return cableTier.ratedTransfer();
+        long total = 0;
+        long cap = cableTier.ratedTransfer();
+        Set<BlockPos> seen = new HashSet<>();
+        for (BlockPos cable : members) {
+            if (total >= cap) return cap;
+            for (Direction d : Direction.values()) {
+                if (total >= cap) return cap;
+                BlockPos neighbor = cable.relative(d);
+                if (members.contains(neighbor)) continue;
+                if (!seen.add(neighbor)) continue;
+                BlockEntity be = level.getBlockEntity(neighbor);
+                if (be == null) continue;
+                if (be.getBlockState().getBlock() instanceof CableBlock) continue;
+                IEnergyStorage es = level.getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        neighbor,
+                        be.getBlockState(),
+                        be,
+                        d.getOpposite()
+                );
+                if (es == null || !es.canReceive()) continue;
+                int got = es.receiveEnergy(Integer.MAX_VALUE, true);
+                if (got > 0) total += got;
+            }
+        }
+        return total;
     }
 
     /**
@@ -140,6 +206,7 @@ public final class EnergyNetwork {
         if (shortCircuitSource != null) {
             pendingInput = 0;
             lastFlow = 0;
+            pulledThisTick = 0;
             return;
         }
 
@@ -167,7 +234,8 @@ public final class EnergyNetwork {
 
         long total = budget + pulled;
         if (total <= 0 || ep.consumers.isEmpty()) {
-            lastFlow = 0;
+            lastFlow = pulledThisTick;
+            pulledThisTick = 0;
             return;
         }
 
@@ -203,7 +271,8 @@ public final class EnergyNetwork {
         }
 
         // 未消化的 budget 部分被丢弃（电缆没有储能）
-        lastFlow = delivered;
+        lastFlow = delivered + pulledThisTick;
+        pulledThisTick = 0;
     }
 
     /** 单次扫描分类邻居为生产者 / 消费者。 */

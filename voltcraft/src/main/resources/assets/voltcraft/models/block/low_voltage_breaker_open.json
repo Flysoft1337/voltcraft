@@ -1,0 +1,10 @@
+{
+  "parent": "voltcraft:block/orientable_back",
+  "textures": {
+    "top":    "voltcraft:block/breaker_top",
+    "bottom": "voltcraft:block/breaker_side",
+    "side":   "voltcraft:block/breaker_side",
+    "front":  "voltcraft:block/low_voltage_breaker_open",
+    "back":   "voltcraft:block/low_voltage_breaker_back"
+  }
+}

@@ -18,6 +18,8 @@
   "block.voltcraft.extra_high_voltage_terminal": "超高压接线端子",
   "voltcraft.breaker.reset": "已合闸。",
   "voltcraft.breaker.already_closed": "空开已处于合闸状态。",
+  "voltcraft.breaker.open_manual": "已手动拉闸。",
+  "voltcraft.breaker.close_manual": "已手动合闸。",
   "voltcraft.terminal.wiring_set": "接线 → %s",
 
   "voltcraft.tier.low_voltage": "低压",
@@ -31,6 +33,7 @@
   "voltcraft.voltage.extra_high": "110kV",
 
   "voltcraft.breaker_state.closed": "合闸",
+  "voltcraft.breaker_state.open_manual": "手动断开",
   "voltcraft.breaker_state.tripped_overload": "跳闸（过载）",
   "voltcraft.breaker_state.tripped_short": "跳闸（短路）",
   "voltcraft.breaker_state.tripped_leakage": "跳闸（漏电）",
