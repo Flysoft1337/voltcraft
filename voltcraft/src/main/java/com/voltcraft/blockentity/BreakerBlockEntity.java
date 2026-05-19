@@ -1,11 +1,11 @@
 package com.voltcraft.blockentity;
 
 import com.voltcraft.block.BreakerBlock;
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.electric.CableTier;
-import com.voltcraft.electric.network.EnergyNetwork;
-import com.voltcraft.electric.network.NetworkManager;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.protection.BreakerState;
+import com.voltcraft.electric.wire.WireAnchor;
+import com.voltcraft.electric.wire.WireAnchorOwner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -14,39 +14,49 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 空气开关方块实体。
+ * 三相空气开关。
  *
- * 拓扑：FACING 是把手朝向（视觉特征）。两侧水平方向是 sideA / sideB，
- * 各自接同等级电缆网络。
+ * 拓扑：FACING 是把手装饰面，不接软线。两侧（FACING 顺时针 / 逆时针）各 3 个接线柱（L/N/E），
+ * 共 6 个 anchor。
  *
- * 双 buffer 跨边推送：
- *   * bufferA：sideA 网络通过 capA 塞进来的电；serverTick 把它 push 到 sideB 网络
- *   * bufferB：sideB 网络通过 capB 塞进来的电；serverTick 把它 push 到 sideA 网络
- * 自循环不可能——每个 buffer 只能推给"另一边"网络。
+ * 6 个独立 buffer，跨边推送：bufferA_L → bufferB_L、bufferA_N → bufferB_N 等。
+ * 跨边规则保证物理上不可能形成自循环。
  *
- * 跳闸阈值（设计文档 4.2）：
- * - 流量 > 200% 额定 → 立刻 TRIPPED_OVERLOAD
- * - 流量 > 120% 额定 持续 100 tick → TRIPPED_OVERLOAD
- * 任一侧网络被打 shortCircuitSource → TRIPPED_SHORT。
+ * 跳闸：
+ *   * 任一相 instant 流量 > 200% rated → TRIPPED_OVERLOAD
+ *   * 任一相持续 > 120% rated 100 tick → TRIPPED_OVERLOAD
+ *   * EARTH 漏电（由 RCD 在 #79 引入）
  */
-public class BreakerBlockEntity extends BlockEntity {
+public class BreakerBlockEntity extends BlockEntity implements WireAnchorOwner {
 
-    private static final String NBT_BUFFER_A = "BufferA";
-    private static final String NBT_BUFFER_B = "BufferB";
+    private static final String NBT_BUFFER_A_L = "BufferAL";
+    private static final String NBT_BUFFER_A_N = "BufferAN";
+    private static final String NBT_BUFFER_A_E = "BufferAE";
+    private static final String NBT_BUFFER_B_L = "BufferBL";
+    private static final String NBT_BUFFER_B_N = "BufferBN";
+    private static final String NBT_BUFFER_B_E = "BufferBE";
     private static final String NBT_OVERLOAD_TICKS = "OverloadTicks";
 
     private static final double OVERLOAD_FACTOR_HOLD = 1.20;
     private static final int OVERLOAD_HOLD_TICKS = 100;
     private static final double OVERLOAD_FACTOR_INSTANT = 2.00;
 
+    public static final int ANCHOR_A_L = 0;
+    public static final int ANCHOR_A_N = 1;
+    public static final int ANCHOR_A_E = 2;
+    public static final int ANCHOR_B_L = 3;
+    public static final int ANCHOR_B_N = 4;
+    public static final int ANCHOR_B_E = 5;
+
     private final CableTier tier;
-    private final EnergyStorage bufferA;
-    private final EnergyStorage bufferB;
+    private final EnergyStorage[] buffers = new EnergyStorage[6];
+    private final WireAnchor[] anchors = new WireAnchor[6];
 
     private int overloadTicks;
     private long lastFlow;
@@ -55,59 +65,61 @@ public class BreakerBlockEntity extends BlockEntity {
         super(type, pos, state);
         this.tier = tier;
         int rate = tier.ratedTransfer();
-        // 容量 = 2×rate（过载情况下 1 tick 可瞬时塞 200%），输入/输出上限 = 2×rate
-        this.bufferA = new EnergyStorage(rate * 2, rate * 2, rate * 2);
-        this.bufferB = new EnergyStorage(rate * 2, rate * 2, rate * 2);
+        for (int i = 0; i < 6; i++) {
+            buffers[i] = new EnergyStorage(rate * 2, rate * 2, rate * 2);
+        }
+        // 局部坐标按 FACING=NORTH 时的「左面 X=0、右面 X=1」布置；
+        // anchorWorldPos 中按 FACING 旋转
+        anchors[ANCHOR_A_L] = new WireAnchor(ANCHOR_A_L, Phase.LIVE,    new Vec3(-0.05, 0.75, 0.5));
+        anchors[ANCHOR_A_N] = new WireAnchor(ANCHOR_A_N, Phase.NEUTRAL, new Vec3(-0.05, 0.50, 0.5));
+        anchors[ANCHOR_A_E] = new WireAnchor(ANCHOR_A_E, Phase.EARTH,   new Vec3(-0.05, 0.25, 0.5));
+        anchors[ANCHOR_B_L] = new WireAnchor(ANCHOR_B_L, Phase.LIVE,    new Vec3( 1.05, 0.75, 0.5));
+        anchors[ANCHOR_B_N] = new WireAnchor(ANCHOR_B_N, Phase.NEUTRAL, new Vec3( 1.05, 0.50, 0.5));
+        anchors[ANCHOR_B_E] = new WireAnchor(ANCHOR_B_E, Phase.EARTH,   new Vec3( 1.05, 0.25, 0.5));
     }
 
     public CableTier tier() { return tier; }
-
     public long lastFlow() { return lastFlow; }
 
     private BreakerState currentState() {
         return getBlockState().getValue(BreakerBlock.STATE);
     }
 
-    public Direction sideA() {
-        return getBlockState().getValue(BreakerBlock.FACING).getClockWise();
-    }
-    public Direction sideB() {
-        return getBlockState().getValue(BreakerBlock.FACING).getCounterClockWise();
+    public Direction sideA() { return getBlockState().getValue(BreakerBlock.FACING).getClockWise(); }
+    public Direction sideB() { return getBlockState().getValue(BreakerBlock.FACING).getCounterClockWise(); }
+
+    @Override
+    @Nullable
+    public WireAnchor anchor(int index) {
+        return (index < 0 || index >= 6) ? null : anchors[index];
     }
 
-    /** sideA 面对外暴露：只 receive 进 bufferA。 */
-    public IEnergyStorage handlerA() {
+    @Override
+    public int anchorCount() { return 6; }
+
+    @Override
+    public IEnergyStorage anchorBuffer(int index) {
+        if (index < 0 || index >= 6) return null;
         if (!currentState().conducts()) return BlockedHandler.INSTANCE;
-        return capA;
+        return buffers[index];
     }
 
-    /** sideB 面对外暴露：只 receive 进 bufferB。 */
-    public IEnergyStorage handlerB() {
-        if (!currentState().conducts()) return BlockedHandler.INSTANCE;
-        return capB;
+    @Override
+    public Vec3 anchorWorldPos(WireAnchor anchor, BlockPos blockPos) {
+        Direction face = getBlockState().getValue(BreakerBlock.FACING);
+        Vec3 lo = anchor.localOffset();
+        double dx = lo.x - 0.5;
+        double dz = lo.z - 0.5;
+        double rx, rz;
+        switch (face) {
+            case NORTH -> { rx = dx; rz = dz; }
+            case SOUTH -> { rx = -dx; rz = -dz; }
+            case EAST  -> { rx = -dz; rz = dx; }
+            case WEST  -> { rx = dz; rz = -dx; }
+            default    -> { rx = dx; rz = dz; }
+        }
+        return new Vec3(blockPos.getX() + 0.5 + rx, blockPos.getY() + lo.y, blockPos.getZ() + 0.5 + rz);
     }
-
-    private final IEnergyStorage capA = new IEnergyStorage() {
-        @Override public int receiveEnergy(int maxReceive, boolean simulate) {
-            return bufferA.receiveEnergy(maxReceive, simulate);
-        }
-        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
-        @Override public int getEnergyStored() { return bufferA.getEnergyStored(); }
-        @Override public int getMaxEnergyStored() { return bufferA.getMaxEnergyStored(); }
-        @Override public boolean canExtract() { return false; }
-        @Override public boolean canReceive() { return true; }
-    };
-
-    private final IEnergyStorage capB = new IEnergyStorage() {
-        @Override public int receiveEnergy(int maxReceive, boolean simulate) {
-            return bufferB.receiveEnergy(maxReceive, simulate);
-        }
-        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
-        @Override public int getEnergyStored() { return bufferB.getEnergyStored(); }
-        @Override public int getMaxEnergyStored() { return bufferB.getMaxEnergyStored(); }
-        @Override public boolean canExtract() { return false; }
-        @Override public boolean canReceive() { return true; }
-    };
 
     public void serverTick() {
         Level level = getLevel();
@@ -119,64 +131,34 @@ public class BreakerBlockEntity extends BlockEntity {
             return;
         }
 
-        EnergyNetwork netA = networkOnSide(level, sideA());
-        EnergyNetwork netB = networkOnSide(level, sideB());
-
-        // 透传电压标签
-        if (netA != null && netB != null) {
-            if (netA.voltageTag() != null && netB.voltageTag() == null) {
-                netB.setVoltageTag(netA.voltageTag());
-            } else if (netB.voltageTag() != null && netA.voltageTag() == null) {
-                netA.setVoltageTag(netB.voltageTag());
-            }
-        }
-
-        // 短路检测
-        if ((netA != null && netA.hasShortCircuit()) || (netB != null && netB.hasShortCircuit())) {
-            trip(level, BreakerState.TRIPPED_SHORT);
-            return;
-        }
-
         long flow = 0;
-
-        // bufferA → netB
-        int aAvail = bufferA.getEnergyStored();
-        if (aAvail > 0 && netB != null) {
-            long pushed = netB.pushEnergy(level, aAvail, false);
-            if (pushed > 0) {
-                bufferA.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
-                flow += pushed;
-            }
-        }
-
-        // bufferB → netA
-        int bAvail = bufferB.getEnergyStored();
-        if (bAvail > 0 && netA != null) {
-            long pushed = netA.pushEnergy(level, bAvail, false);
-            if (pushed > 0) {
-                bufferB.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
-                flow += pushed;
-            }
+        long maxPhaseFlow = 0;
+        for (int p = 0; p < 3; p++) {
+            int aIdx = p;
+            int bIdx = p + 3;
+            long phaseFlow = transfer(buffers[aIdx], buffers[bIdx]);
+            phaseFlow += transfer(buffers[bIdx], buffers[aIdx]);
+            flow += phaseFlow;
+            if (phaseFlow > maxPhaseFlow) maxPhaseFlow = phaseFlow;
         }
 
         lastFlow = flow;
-        evaluateOverload(level, flow);
+        evaluateOverload(level, maxPhaseFlow);
     }
 
-    @Nullable
-    private EnergyNetwork networkOnSide(Level level, Direction d) {
-        BlockPos pos = getBlockPos().relative(d);
-        BlockState bs = level.getBlockState(pos);
-        if (bs.getBlock() instanceof CableBlock cb && cb.tier() == tier) {
-            return NetworkManager.get(level).networkAt(pos);
-        }
-        return null;
+    private static long transfer(EnergyStorage src, EnergyStorage dst) {
+        int avail = src.extractEnergy(Integer.MAX_VALUE, true);
+        if (avail <= 0) return 0;
+        int accepted = dst.receiveEnergy(avail, true);
+        if (accepted <= 0) return 0;
+        src.extractEnergy(accepted, false);
+        dst.receiveEnergy(accepted, false);
+        return accepted;
     }
 
-    private void evaluateOverload(Level level, long flow) {
+    private void evaluateOverload(Level level, long phaseFlow) {
         long rated = tier.ratedTransfer();
-        double factor = (double) flow / rated;
-
+        double factor = (double) phaseFlow / rated;
         if (factor > OVERLOAD_FACTOR_INSTANT) {
             trip(level, BreakerState.TRIPPED_OVERLOAD);
             return;
@@ -186,21 +168,18 @@ public class BreakerBlockEntity extends BlockEntity {
             if (overloadTicks >= OVERLOAD_HOLD_TICKS) {
                 trip(level, BreakerState.TRIPPED_OVERLOAD);
             }
-        } else {
-            decayOverload();
+        } else if (overloadTicks > 0) {
+            overloadTicks--;
         }
-    }
-
-    private void decayOverload() {
-        if (overloadTicks > 0) overloadTicks--;
     }
 
     private void trip(Level level, BreakerState reason) {
         overloadTicks = 0;
         BlockState newState = getBlockState().setValue(BreakerBlock.STATE, reason);
         level.setBlock(getBlockPos(), newState, 3);
-        bufferA.extractEnergy(bufferA.getEnergyStored(), false);
-        bufferB.extractEnergy(bufferB.getEnergyStored(), false);
+        for (EnergyStorage b : buffers) {
+            b.extractEnergy(b.getEnergyStored(), false);
+        }
         setChanged();
     }
 
@@ -223,16 +202,24 @@ public class BreakerBlockEntity extends BlockEntity {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        if (tag.contains(NBT_BUFFER_A)) bufferA.deserializeNBT(registries, tag.get(NBT_BUFFER_A));
-        if (tag.contains(NBT_BUFFER_B)) bufferB.deserializeNBT(registries, tag.get(NBT_BUFFER_B));
+        if (tag.contains(NBT_BUFFER_A_L)) buffers[ANCHOR_A_L].deserializeNBT(registries, tag.get(NBT_BUFFER_A_L));
+        if (tag.contains(NBT_BUFFER_A_N)) buffers[ANCHOR_A_N].deserializeNBT(registries, tag.get(NBT_BUFFER_A_N));
+        if (tag.contains(NBT_BUFFER_A_E)) buffers[ANCHOR_A_E].deserializeNBT(registries, tag.get(NBT_BUFFER_A_E));
+        if (tag.contains(NBT_BUFFER_B_L)) buffers[ANCHOR_B_L].deserializeNBT(registries, tag.get(NBT_BUFFER_B_L));
+        if (tag.contains(NBT_BUFFER_B_N)) buffers[ANCHOR_B_N].deserializeNBT(registries, tag.get(NBT_BUFFER_B_N));
+        if (tag.contains(NBT_BUFFER_B_E)) buffers[ANCHOR_B_E].deserializeNBT(registries, tag.get(NBT_BUFFER_B_E));
         overloadTicks = tag.getInt(NBT_OVERLOAD_TICKS);
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put(NBT_BUFFER_A, bufferA.serializeNBT(registries));
-        tag.put(NBT_BUFFER_B, bufferB.serializeNBT(registries));
+        tag.put(NBT_BUFFER_A_L, buffers[ANCHOR_A_L].serializeNBT(registries));
+        tag.put(NBT_BUFFER_A_N, buffers[ANCHOR_A_N].serializeNBT(registries));
+        tag.put(NBT_BUFFER_A_E, buffers[ANCHOR_A_E].serializeNBT(registries));
+        tag.put(NBT_BUFFER_B_L, buffers[ANCHOR_B_L].serializeNBT(registries));
+        tag.put(NBT_BUFFER_B_N, buffers[ANCHOR_B_N].serializeNBT(registries));
+        tag.put(NBT_BUFFER_B_E, buffers[ANCHOR_B_E].serializeNBT(registries));
         tag.putInt(NBT_OVERLOAD_TICKS, overloadTicks);
     }
 

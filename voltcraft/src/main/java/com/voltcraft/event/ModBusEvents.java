@@ -40,19 +40,9 @@ public final class ModBusEvents {
                 }
         );
 
-        // 空开：sideA / sideB 各自暴露独立 cap，仅 receive 进自己的 buffer。
-        // serverTick 把 bufferA push 给 sideB 网络、bufferB push 给 sideA 网络——
-        // 跨边推送，物理上不可能形成自循环。
-        event.registerBlockEntity(
-                Capabilities.EnergyStorage.BLOCK,
-                ModBlockEntities.BREAKER.get(),
-                (BreakerBlockEntity be, Direction side) -> {
-                    if (side == null) return be.handlerA();
-                    if (side == be.sideA()) return be.handlerA();
-                    if (side == be.sideB()) return be.handlerB();
-                    return null;
-                }
-        );
+        // 空开三相：6 个 anchor 通过软线接入，不暴露任何 capability
+        // （旧的 cable 邻接 cap 已废弃；软线 entity 直接走 anchorBuffer）
+        // 故意不注册 BREAKER 的 EnergyStorage cap。
 
         // 接线端子：仅在机器面（FACING）暴露合流后的单口 IEnergyStorage。
         // 三相 L/N/E 通过 anchor + 软线接入，不走 capability。
