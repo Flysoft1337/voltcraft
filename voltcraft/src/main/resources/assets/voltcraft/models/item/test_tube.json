@@ -1,0 +1,7 @@
+{
+  "parent": "neoforge:item/default",
+  "loader": "neoforge:fluid_container",
+  "textures": {
+    "base": "voltcraft:item/test_tube"
+  }
+}
