@@ -1,6 +1,7 @@
 package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
+import com.voltcraft.item.BrineBucketItem;
 import com.voltcraft.item.FlaskItem;
 import com.voltcraft.item.GogglesItem;
 import com.voltcraft.item.TestTubeItem;
@@ -59,6 +60,28 @@ public final class ModItems {
             () -> new Item(new Item.Properties())
     );
 
+    // Lithium items (from spodumene ore)
+    public static final DeferredItem<Item> RAW_SPODUMENE = ITEMS.register(
+            "raw_spodumene",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> LITHIUM_INGOT = ITEMS.register(
+            "lithium_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Sodium items
+    public static final DeferredItem<Item> SODIUM_INGOT = ITEMS.register(
+            "sodium_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> SODIUM_OXIDE_INGOT = ITEMS.register(
+            "sodium_oxide_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
     // Parts items
     public static final DeferredItem<Item> SPRING = ITEMS.register(
             "spring",
@@ -100,6 +123,12 @@ public final class ModItems {
     public static final DeferredItem<Item> SCREW = ITEMS.register(
             "screw",
             () -> new Item(new Item.Properties())
+    );
+
+    // Parts - brine bucket
+    public static final DeferredItem<BrineBucketItem> BRINE_BUCKET = ITEMS.register(
+            "brine_bucket",
+            () -> new BrineBucketItem(new Item.Properties())
     );
 
     // Tools

@@ -8,6 +8,9 @@
     "voltcraft:garnierite_ore",
     "voltcraft:deepslate_garnierite_ore",
     "voltcraft:cerussite_ore",
-    "voltcraft:deepslate_cerussite_ore"
+    "voltcraft:deepslate_cerussite_ore",
+    "voltcraft:spodumene_ore",
+    "voltcraft:deepslate_spodumene_ore",
+    "voltcraft:electrolyzer"
   ]
 }

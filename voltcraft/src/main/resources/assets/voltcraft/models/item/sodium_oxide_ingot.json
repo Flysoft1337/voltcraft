@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "voltcraft:item/sodium_oxide_ingot"
+  }
+}

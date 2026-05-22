@@ -3,6 +3,7 @@ package com.voltcraft.registry;
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.BreakerBlock;
 import com.voltcraft.block.CableBlock;
+import com.voltcraft.block.ElectrolyzerBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.electric.CableTier;
@@ -112,6 +113,38 @@ public final class ModBlocks {
                     .destroyTime(4.5f)
                     .explosionResistance(6.0f)
                     .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    // Spodumene ore blocks (lithium ore)
+    public static final DeferredBlock<Block> SPODUMENE_ORE = registerWithItem(
+            "spodumene_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .destroyTime(3.0f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    public static final DeferredBlock<Block> DEEPSLATE_SPODUMENE_ORE = registerWithItem(
+            "deepslate_spodumene_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DEEPSLATE)
+                    .destroyTime(4.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    // Electrolyzer block
+    public static final DeferredBlock<ElectrolyzerBlock> ELECTROLYZER = registerWithItem(
+            "electrolyzer",
+            () -> new ElectrolyzerBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .destroyTime(3.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.METAL)
                     .requiresCorrectToolForDrops())
     );
 

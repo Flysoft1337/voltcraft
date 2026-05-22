@@ -14,7 +14,7 @@ public final class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, VoltCraft.MOD_ID);
 
-    /** 设备标签页：电缆、变压器、空开、端子 */
+    /** 设备标签页：电缆、变压器、空开、端子、器械 */
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EQUIPMENT =
             TABS.register("equipment", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.voltcraft.equipment"))
@@ -32,6 +32,7 @@ public final class ModCreativeTabs {
                         for (CableTier tier : CableTier.values()) {
                             output.accept(ModBlocks.TERMINALS.get(tier).get());
                         }
+                        output.accept(ModBlocks.ELECTROLYZER.get());
                     })
                     .build());
 
@@ -57,6 +58,12 @@ public final class ModCreativeTabs {
                         output.accept(ModBlocks.DEEPSLATE_CERUSSITE_ORE.get());
                         output.accept(ModItems.RAW_LEAD.get());
                         output.accept(ModItems.LEAD_INGOT.get());
+                        output.accept(ModBlocks.SPODUMENE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_SPODUMENE_ORE.get());
+                        output.accept(ModItems.RAW_SPODUMENE.get());
+                        output.accept(ModItems.LITHIUM_INGOT.get());
+                        output.accept(ModItems.SODIUM_INGOT.get());
+                        output.accept(ModItems.SODIUM_OXIDE_INGOT.get());
                     })
                     .build());
 
@@ -69,6 +76,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.SPRING.get());
                         output.accept(ModItems.FUSE.get());
                         output.accept(ModItems.SCREW.get());
+                        output.accept(ModItems.BRINE_BUCKET.get());
                         output.accept(ModItems.ZINC_MANGANESE_BATTERY.get());
                         output.accept(ModItems.CARBON_ROD.get());
                         output.accept(ModItems.TEST_TUBE.get());
