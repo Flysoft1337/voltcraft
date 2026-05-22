@@ -39,12 +39,12 @@ public final class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MINERALS =
             TABS.register("minerals", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.voltcraft.minerals"))
-                    .icon(() -> ModItems.HEMIMORPHITE.get().getDefaultInstance())
+                    .icon(() -> ModItems.ZINC_INGOT.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModBlocks.HEMIMORPHITE_ORE.get());
                         output.accept(ModBlocks.DEEPSLATE_HEMIMORPHITE_ORE.get());
                         output.accept(ModItems.RAW_HEMIMORPHITE.get());
-                        output.accept(ModItems.HEMIMORPHITE.get());
+                        output.accept(ModItems.ZINC_INGOT.get());
                         output.accept(ModBlocks.RHODONITE_ORE.get());
                         output.accept(ModBlocks.DEEPSLATE_RHODONITE_ORE.get());
                         output.accept(ModItems.RAW_MANGANESE.get());
@@ -68,6 +68,11 @@ public final class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SPRING.get());
                         output.accept(ModItems.FUSE.get());
+                        output.accept(ModItems.ZINC_MANGANESE_BATTERY.get());
+                        output.accept(ModItems.CARBON_ROD.get());
+                        output.accept(ModItems.TEST_TUBE.get());
+                        output.accept(ModItems.TEST_TUBE_ELECTROLYTE_PASTE.get());
+                        output.accept(ModItems.FLASK.get());
                     })
                     .build());
 

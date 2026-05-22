@@ -1,6 +1,8 @@
 package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
+import com.voltcraft.item.FlaskItem;
+import com.voltcraft.item.TestTubeItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -11,14 +13,14 @@ public final class ModItems {
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(VoltCraft.MOD_ID);
 
-    // Hemimorphite items
+    // Hemimorphite items (zinc ore)
     public static final DeferredItem<Item> RAW_HEMIMORPHITE = ITEMS.register(
             "raw_hemimorphite",
             () -> new Item(new Item.Properties())
     );
 
-    public static final DeferredItem<Item> HEMIMORPHITE = ITEMS.register(
-            "hemimorphite",
+    public static final DeferredItem<Item> ZINC_INGOT = ITEMS.register(
+            "zinc_ingot",
             () -> new Item(new Item.Properties())
     );
 
@@ -64,6 +66,32 @@ public final class ModItems {
     public static final DeferredItem<Item> FUSE = ITEMS.register(
             "fuse",
             () -> new Item(new Item.Properties())
+    );
+
+    // Lab / experimental items
+    public static final DeferredItem<Item> ZINC_MANGANESE_BATTERY = ITEMS.register(
+            "zinc_manganese_battery",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> CARBON_ROD = ITEMS.register(
+            "carbon_rod",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> TEST_TUBE_ELECTROLYTE_PASTE = ITEMS.register(
+            "test_tube_electrolyte_paste",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<TestTubeItem> TEST_TUBE = ITEMS.register(
+            "test_tube",
+            () -> new TestTubeItem(new Item.Properties())
+    );
+
+    public static final DeferredItem<FlaskItem> FLASK = ITEMS.register(
+            "flask",
+            () -> new FlaskItem(new Item.Properties())
     );
 
     private ModItems() {}
