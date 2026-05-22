@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.voltcraft.registry.ModBlockEntities;
 import com.voltcraft.registry.ModBlocks;
 import com.voltcraft.registry.ModCreativeTabs;
+import com.voltcraft.registry.ModDataComponents;
 import com.voltcraft.registry.ModItems;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -18,6 +19,7 @@ public class VoltCraft {
     public VoltCraft(IEventBus modEventBus) {
         ModBlocks.register(modEventBus);
         ModItems.register(modEventBus);
+        ModDataComponents.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
 
