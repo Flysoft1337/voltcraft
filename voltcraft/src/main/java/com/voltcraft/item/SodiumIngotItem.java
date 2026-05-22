@@ -17,7 +17,7 @@ public class SodiumIngotItem extends Item {
     private static final int OXIDATION_TIME = 600; // 30秒
     private static final float EXPLOSION_POWER = 1.5f;
     private static final int EXPLOSION_DELAY = 40; // 2秒
-    private static final float FLOAT_UP_SPEED = 0.1f; // 上浮速度
+    private static final float FLOAT_UP_SPEED = 0.05f; // 上浮速度
 
     public SodiumIngotItem(Properties properties) {
         super(properties);
