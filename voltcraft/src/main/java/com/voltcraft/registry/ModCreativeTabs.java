@@ -29,8 +29,16 @@ public final class ModCreativeTabs {
                             output.accept(ModBlocks.BREAKERS.get(tier).get());
                         }
                         for (CableTier tier : CableTier.values()) {
+                            output.accept(ModBlocks.THREE_PHASE_BREAKERS.get(tier).get());
+                        }
+                        for (CableTier tier : CableTier.values()) {
                             output.accept(ModBlocks.TERMINALS.get(tier).get());
                         }
+                        // Hemimorphite items
+                        output.accept(ModBlocks.HEMIMORPHITE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_HEMIMORPHITE_ORE.get());
+                        output.accept(ModItems.RAW_HEMIMORPHITE.get());
+                        output.accept(ModItems.HEMIMORPHITE.get());
                     })
                     .build());
 
