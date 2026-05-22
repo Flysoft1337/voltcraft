@@ -6,11 +6,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
-
 public class LithiumIngotItem extends Item {
 
     private static final int BURN_DURATION = 200; // 10秒
+    private static final float FLOAT_UP_SPEED = 0.25f; // 上浮速度
 
     public LithiumIngotItem(Properties properties) {
         super(properties);
@@ -53,28 +52,8 @@ public class LithiumIngotItem extends Item {
     }
 
     private void floatOnWater(Level level, ItemEntity entity) {
-        double surfaceY = findWaterSurfaceY(level, entity);
-        if (surfaceY >= 0 && entity.getY() < surfaceY) {
-            entity.setPos(entity.getX(), surfaceY, entity.getZ());
-            entity.setDeltaMovement(entity.getDeltaMovement().x, 0, entity.getDeltaMovement().z);
-            entity.setNoGravity(true);
-            entity.fallDistance = 0;
-        }
-    }
-
-    private double findWaterSurfaceY(Level level, ItemEntity entity) {
-        BlockPos.MutableBlockPos mpos = new BlockPos.MutableBlockPos(
-                (int) Math.floor(entity.getX()),
-                (int) Math.floor(entity.getY()),
-                (int) Math.floor(entity.getZ()));
-        for (int i = 0; i < 5; i++) {
-            if (!level.getFluidState(mpos).is(Fluids.WATER) &&
-                !level.getFluidState(mpos).is(Fluids.FLOWING_WATER)) {
-                return mpos.getY();
-            }
-            mpos.move(0, 1, 0);
-        }
-        return -1;
+        entity.setDeltaMovement(0, FLOAT_UP_SPEED, 0);
+        entity.fallDistance = 0;
     }
 
     private boolean isInWater(Level level, ItemEntity entity) {
