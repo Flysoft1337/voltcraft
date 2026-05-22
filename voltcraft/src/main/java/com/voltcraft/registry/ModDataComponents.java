@@ -1,8 +1,10 @@
 package com.voltcraft.registry;
 
+import com.mojang.serialization.Codec;
 import com.voltcraft.VoltCraft;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.fluids.SimpleFluidContent;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -17,6 +19,12 @@ public final class ModDataComponents {
             COMPONENTS.registerComponentType("fluid_content", builder -> builder
                     .persistent(SimpleFluidContent.CODEC)
                     .networkSynchronized(SimpleFluidContent.STREAM_CODEC));
+
+    /** 钠锭氧化进度 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> OXIDATION_PROGRESS =
+            COMPONENTS.registerComponentType("oxidation_progress", builder -> builder
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.INT));
 
     private ModDataComponents() {}
 

@@ -4,6 +4,8 @@ import com.voltcraft.VoltCraft;
 import com.voltcraft.item.BrineBucketItem;
 import com.voltcraft.item.FlaskItem;
 import com.voltcraft.item.GogglesItem;
+import com.voltcraft.item.LithiumIngotItem;
+import com.voltcraft.item.SodiumIngotItem;
 import com.voltcraft.item.TestTubeItem;
 import com.voltcraft.item.ToolItem;
 import net.minecraft.world.item.Item;
@@ -66,15 +68,17 @@ public final class ModItems {
             () -> new Item(new Item.Properties())
     );
 
-    public static final DeferredItem<Item> LITHIUM_INGOT = ITEMS.register(
+    /** 锂锭 — 遇水自燃 */
+    public static final DeferredItem<LithiumIngotItem> LITHIUM_INGOT = ITEMS.register(
             "lithium_ingot",
-            () -> new Item(new Item.Properties())
+            () -> new LithiumIngotItem(new Item.Properties())
     );
 
     // Sodium items
-    public static final DeferredItem<Item> SODIUM_INGOT = ITEMS.register(
+    /** 钠锭 — 在空气中氧化，遇水爆炸 */
+    public static final DeferredItem<SodiumIngotItem> SODIUM_INGOT = ITEMS.register(
             "sodium_ingot",
-            () -> new Item(new Item.Properties())
+            () -> new SodiumIngotItem(new Item.Properties())
     );
 
     public static final DeferredItem<Item> SODIUM_OXIDE_INGOT = ITEMS.register(

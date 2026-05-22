@@ -1,0 +1,168 @@
+package com.voltcraft.item;
+
+import com.voltcraft.registry.ModDataComponents;
+import com.voltcraft.registry.ModItems;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+
+/**
+ * 钠锭 — 遇水爆炸，在空气中氧化
+ *
+ * 特殊行为：
+ * - 在手中或背包中超过30秒自动变成氧化钠锭
+ * - 投入水中自燃且发生小型爆炸
+ */
+public class SodiumIngotItem extends Item {
+
+    /** 氧化时间（tick）：30秒 = 600 tick */
+    private static final int OXIDATION_TIME = 600;
+
+    /** 爆炸强度 */
+    private static final float EXPLOSION_POWER = 1.5f;
+
+    /** 自燃持续时间（tick） */
+    private static final int BURN_DURATION = 100; // 5秒
+
+    public SodiumIngotItem(Properties properties) {
+        super(properties);
+    }
+
+    // === 背包中的氧化逻辑 ===
+
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
+        if (level.isClientSide()) {
+            return;
+        }
+
+        // 获取或初始化氧化计时器
+        int oxidationProgress = stack.getOrDefault(ModDataComponents.OXIDATION_PROGRESS.get(), 0);
+
+        // 检查是否暴露在空气中（不在水中）
+        if (!isInWater(entity)) {
+            oxidationProgress++;
+
+            if (oxidationProgress >= OXIDATION_TIME) {
+                // 氧化完成，变成氧化钠锭
+                ItemStack oxideStack = new ItemStack(ModItems.SODIUM_OXIDE_INGOT.get(), stack.getCount());
+
+                // 替换背包中的物品
+                if (entity instanceof Player player) {
+                    player.getInventory().setItem(slot, oxideStack);
+                }
+
+                return;
+            }
+        } else {
+            // 在水中，重置氧化进度
+            oxidationProgress = 0;
+        }
+
+        // 保存氧化进度
+        stack.set(ModDataComponents.OXIDATION_PROGRESS.get(), oxidationProgress);
+    }
+
+    // === 物品实体的水中爆炸逻辑 ===
+
+    @Override
+    public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity) {
+        Level level = entity.level();
+
+        if (level.isClientSide()) {
+            return false;
+        }
+
+        BlockPos pos = entity.blockPosition();
+
+        // 检测是否在水中
+        if (isInWater(level, pos)) {
+            // 开始自燃
+            entity.setRemainingFireTicks(BURN_DURATION);
+
+            // 产生火焰粒子效果
+            if (level.random.nextInt(2) == 0) {
+                level.addParticle(
+                        net.minecraft.core.particles.ParticleTypes.FLAME,
+                        entity.getX() + (level.random.nextDouble() - 0.5) * 0.5,
+                        entity.getY() + 0.5,
+                        entity.getZ() + (level.random.nextDouble() - 0.5) * 0.5,
+                        0, 0.05, 0
+                );
+
+                // 钠遇水还会产生氢气气泡
+                level.addParticle(
+                        net.minecraft.core.particles.ParticleTypes.BUBBLE,
+                        entity.getX() + (level.random.nextDouble() - 0.5) * 0.3,
+                        entity.getY() + 0.3,
+                        entity.getZ() + (level.random.nextDouble() - 0.5) * 0.3,
+                        0, 0.1, 0
+                );
+            }
+
+            // 燃烧到一半时发生爆炸
+            if (entity.getRemainingFireTicks() == BURN_DURATION / 2) {
+                // 小型爆炸（不破坏方块，但造成伤害和击退）
+                level.explode(
+                        entity,
+                        entity.getX(), entity.getY(), entity.getZ(),
+                        EXPLOSION_POWER,
+                        Level.ExplosionInteraction.NONE // 不破坏方块
+                );
+
+                // 产生大量烟雾
+                for (int i = 0; i < 10; i++) {
+                    level.addParticle(
+                            net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
+                            entity.getX() + (level.random.nextDouble() - 0.5),
+                            entity.getY() + level.random.nextDouble(),
+                            entity.getZ() + (level.random.nextDouble() - 0.5),
+                            0, 0.1, 0
+                    );
+                }
+
+                // 爆炸后消失
+                entity.discard();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // === 辅助方法 ===
+
+    /**
+     * 检测实体是否在水中
+     */
+    private boolean isInWater(Entity entity) {
+        BlockPos pos = entity.blockPosition();
+        BlockState state = entity.level().getBlockState(pos);
+        return state.getFluidState().is(Fluids.WATER) ||
+               state.getFluidState().is(Fluids.FLOWING_WATER);
+    }
+
+    /**
+     * 检测物品实体是否在水中（更宽范围的检测）
+     */
+    private boolean isInWater(Level level, BlockPos pos) {
+        // 检查当前位置和周围是否有水
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos checkPos = pos.offset(x, 0, z);
+                BlockState state = level.getBlockState(checkPos);
+                if (state.getFluidState().is(Fluids.WATER) ||
+                    state.getFluidState().is(Fluids.FLOWING_WATER)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
