@@ -1,8 +1,10 @@
 package com.voltcraft.event;
 
 import com.voltcraft.VoltCraft;
+import com.voltcraft.block.ElectrolyzerBlock;
 import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.blockentity.CableBlockEntity;
+import com.voltcraft.blockentity.ElectrolyzerBlockEntity;
 import com.voltcraft.blockentity.TerminalBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.electric.capability.CableEnergyHandler;
@@ -57,6 +59,34 @@ public final class ModBusEvents {
                 (TerminalBlockEntity be, Direction side) -> {
                     if (side == null) return be.machineHandler();
                     return side == be.machineFace() ? be.machineHandler() : null;
+                }
+        );
+
+        // 水解槽：背面输入能量，左侧输入物品，右侧输出物品
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ELECTROLYZER.get(),
+                (ElectrolyzerBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getEnergyStorage();
+                    Direction facing = be.getBlockState().getValue(ElectrolyzerBlock.FACING);
+                    return side == facing.getOpposite() ? be.getEnergyStorage() : null;
+                }
+        );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.ELECTROLYZER.get(),
+                (ElectrolyzerBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getItemHandler();
+                    Direction facing = be.getBlockState().getValue(ElectrolyzerBlock.FACING);
+                    Direction left = facing.getCounterClockWise();
+                    Direction right = facing.getClockWise();
+                    if (side == left) {
+                        return be.getItemHandler(); // 左侧输入
+                    } else if (side == right) {
+                        return be.getItemHandler(); // 右侧输出（需要区分）
+                    }
+                    return null;
                 }
         );
     }

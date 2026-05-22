@@ -3,10 +3,12 @@ package com.voltcraft.registry;
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.BreakerBlock;
 import com.voltcraft.block.CableBlock;
+import com.voltcraft.block.ElectrolyzerBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.blockentity.CableBlockEntity;
+import com.voltcraft.blockentity.ElectrolyzerBlockEntity;
 import com.voltcraft.blockentity.TerminalBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.electric.CableTier;
@@ -82,6 +84,14 @@ public final class ModBlockEntities {
                         terminalBlocks
                 ).build(null);
             });
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ElectrolyzerBlockEntity>> ELECTROLYZER =
+            BLOCK_ENTITIES.register("electrolyzer", () ->
+                    BlockEntityType.Builder.of(
+                            ElectrolyzerBlockEntity::new,
+                            ModBlocks.ELECTROLYZER.get()
+                    ).build(null)
+            );
 
     private ModBlockEntities() {}
 

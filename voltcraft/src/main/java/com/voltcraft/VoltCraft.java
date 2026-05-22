@@ -6,6 +6,7 @@ import com.voltcraft.registry.ModBlocks;
 import com.voltcraft.registry.ModCreativeTabs;
 import com.voltcraft.registry.ModDataComponents;
 import com.voltcraft.registry.ModItems;
+import com.voltcraft.registry.ModMenuTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class VoltCraft {
         ModItems.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModBlockEntities.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
 
         LOGGER.info("VoltCraft initialized");
