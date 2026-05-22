@@ -2,7 +2,9 @@ package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.item.FlaskItem;
+import com.voltcraft.item.GogglesItem;
 import com.voltcraft.item.TestTubeItem;
+import com.voltcraft.item.ToolItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -92,6 +94,54 @@ public final class ModItems {
     public static final DeferredItem<FlaskItem> FLASK = ITEMS.register(
             "flask",
             () -> new FlaskItem(new Item.Properties())
+    );
+
+    // Parts - screws
+    public static final DeferredItem<Item> SCREW = ITEMS.register(
+            "screw",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Tools
+    public static final DeferredItem<ToolItem> HAMMER = ITEMS.register(
+            "hammer",
+            () -> new ToolItem(new Item.Properties().durability(1000))
+    );
+
+    public static final DeferredItem<ToolItem> WRENCH = ITEMS.register(
+            "wrench",
+            () -> new ToolItem(new Item.Properties().durability(1200))
+    );
+
+    public static final DeferredItem<GogglesItem> GOGGLES = ITEMS.register(
+            "goggles",
+            () -> new GogglesItem(ModArmorMaterials.GOGGLES, new Item.Properties())
+    );
+
+    // Plates
+    public static final DeferredItem<Item> IRON_PLATE = ITEMS.register(
+            "iron_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> ZINC_PLATE = ITEMS.register(
+            "zinc_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> MANGANESE_PLATE = ITEMS.register(
+            "manganese_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> NICKEL_PLATE = ITEMS.register(
+            "nickel_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> LEAD_PLATE = ITEMS.register(
+            "lead_plate",
+            () -> new Item(new Item.Properties())
     );
 
     private ModItems() {}

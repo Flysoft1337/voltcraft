@@ -60,7 +60,7 @@ public final class ModCreativeTabs {
                     })
                     .build());
 
-    /** 零部件标签页：弹簧、熔断器等 */
+    /** 零部件标签页：弹簧、熔断器、螺丝等 */
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PARTS =
             TABS.register("parts", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.voltcraft.parts"))
@@ -68,11 +68,29 @@ public final class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SPRING.get());
                         output.accept(ModItems.FUSE.get());
+                        output.accept(ModItems.SCREW.get());
                         output.accept(ModItems.ZINC_MANGANESE_BATTERY.get());
                         output.accept(ModItems.CARBON_ROD.get());
                         output.accept(ModItems.TEST_TUBE.get());
                         output.accept(ModItems.TEST_TUBE_ELECTROLYTE_PASTE.get());
                         output.accept(ModItems.FLASK.get());
+                    })
+                    .build());
+
+    /** 工具标签页：锤子、扳手、护目镜、金属板 */
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TOOLS =
+            TABS.register("tools", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.voltcraft.tools"))
+                    .icon(() -> ModItems.HAMMER.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.HAMMER.get());
+                        output.accept(ModItems.WRENCH.get());
+                        output.accept(ModItems.GOGGLES.get());
+                        output.accept(ModItems.IRON_PLATE.get());
+                        output.accept(ModItems.ZINC_PLATE.get());
+                        output.accept(ModItems.MANGANESE_PLATE.get());
+                        output.accept(ModItems.NICKEL_PLATE.get());
+                        output.accept(ModItems.LEAD_PLATE.get());
                     })
                     .build());
 
