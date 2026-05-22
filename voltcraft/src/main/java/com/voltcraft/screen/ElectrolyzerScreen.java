@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 /**
- * 水解槽 UI 界面
+ * 电解槽 UI 界面
  */
 public class ElectrolyzerScreen extends AbstractContainerScreen<ElectrolyzerMenu> {
 

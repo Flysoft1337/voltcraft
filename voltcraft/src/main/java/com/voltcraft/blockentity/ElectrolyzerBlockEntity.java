@@ -25,7 +25,7 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 水解槽方块实体 — 处理电解配方
+ * 电解槽方块实体 — 处理电解配方
  *
  * 能量输入：背面（FACING 的反方向）
  * 物品输入：左侧（FACING 的左侧）
@@ -207,13 +207,7 @@ public class ElectrolyzerBlockEntity extends BlockEntity implements MenuProvider
      * 获取输出物品
      */
     private ItemStack getOutputItem(ItemStack input) {
-        if (input.is(ModItems.BRINE_BUCKET.get())) {
-            // 盐水桶 → 钠锭 + 氧化钠锭
-            return new ItemStack(ModItems.SODIUM_INGOT.get());
-        } else if (input.is(net.minecraft.world.item.Items.WATER_BUCKET)) {
-            // 水桶 → 氢气（暂时用别的物品代替）
-            return new ItemStack(ModItems.LITHIUM_INGOT.get()); // TODO: 替换为氢气
-        }
+        // TODO: 实现电解配方
         return ItemStack.EMPTY;
     }
 

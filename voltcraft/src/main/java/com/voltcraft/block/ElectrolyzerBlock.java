@@ -23,7 +23,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 水解槽 — 用于电解盐水和电解水的器械方块
+ * 电解槽 — 用于电解盐水和电解水的器械方块
  *
  * 能量输入：背面
  * 物品输入：左侧

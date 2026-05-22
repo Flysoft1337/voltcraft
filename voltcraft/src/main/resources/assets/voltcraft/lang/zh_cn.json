@@ -59,7 +59,7 @@
   "block.voltcraft.medium_voltage_terminal": "中压接线端子",
   "block.voltcraft.high_voltage_terminal": "高压接线端子",
   "block.voltcraft.extra_high_voltage_terminal": "超高压接线端子",
-  "block.voltcraft.electrolyzer": "水解槽",
+  "block.voltcraft.electrolyzer": "电解槽",
   "voltcraft.breaker.reset": "已合闸。",
   "voltcraft.breaker.already_closed": "空开已处于合闸状态。",
   "voltcraft.terminal.wiring_set": "接线 → %s",

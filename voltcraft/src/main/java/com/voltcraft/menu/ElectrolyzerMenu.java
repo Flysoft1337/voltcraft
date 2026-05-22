@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
- * 水解槽容器 — 客户端和服务端同步
+ * 电解槽容器 — 客户端和服务端同步
  */
 public class ElectrolyzerMenu extends AbstractContainerMenu {
 
@@ -36,7 +36,7 @@ public class ElectrolyzerMenu extends AbstractContainerMenu {
         addPlayerInventory(playerInventory);
         addPlayerHotbar(playerInventory);
 
-        // 添加水解槽槽位
+        // 添加电解槽槽位
         // 输入槽（上方）
         this.addSlot(new SlotItemHandler(this.blockEntity.getItemHandler(),
                 ElectrolyzerBlockEntity.INPUT_SLOT, 56, 17));
@@ -89,14 +89,14 @@ public class ElectrolyzerMenu extends AbstractContainerMenu {
             ItemStack stack = slot.getItem();
             result = stack.copy();
 
-            // 从水解槽槽位移到玩家背包
+            // 从电解槽槽位移到玩家背包
             if (index < 2) {
                 if (!this.moveItemStackTo(stack, 2, 38, true)) {
                     return ItemStack.EMPTY;
                 }
                 slot.onQuickCraft(stack, result);
             }
-            // 从玩家背包移到水解槽
+            // 从玩家背包移到电解槽
             else {
                 // 尝试放入输入槽
                 if (ElectrolyzerBlockEntity.isInputItem(stack)) {
