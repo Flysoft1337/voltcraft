@@ -20,11 +20,11 @@ public final class ModDataComponents {
                     .persistent(SimpleFluidContent.CODEC)
                     .networkSynchronized(SimpleFluidContent.STREAM_CODEC));
 
-    /** 钠锭氧化进度 */
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> OXIDATION_PROGRESS =
-            COMPONENTS.registerComponentType("oxidation_progress", builder -> builder
-                    .persistent(Codec.INT)
-                    .networkSynchronized(ByteBufCodecs.INT));
+    /** 钠锭氧化开始时间（gameTime tick），0表示未开始 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> OXIDATION_START_TIME =
+            COMPONENTS.registerComponentType("oxidation_start_time", builder -> builder
+                    .persistent(Codec.LONG)
+                    .networkSynchronized(ByteBufCodecs.VAR_LONG));
 
     private ModDataComponents() {}
 
