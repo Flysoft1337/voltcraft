@@ -22,6 +22,17 @@ public final class ModItems {
             () -> new Item(new Item.Properties())
     );
 
+    // Parts items
+    public static final DeferredItem<Item> SPRING = ITEMS.register(
+            "spring",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> FUSE = ITEMS.register(
+            "fuse",
+            () -> new Item(new Item.Properties())
+    );
+
     private ModItems() {}
 
     public static void register(IEventBus modEventBus) {

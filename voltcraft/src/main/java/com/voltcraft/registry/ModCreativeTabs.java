@@ -48,6 +48,17 @@ public final class ModCreativeTabs {
                     })
                     .build());
 
+    /** 零部件标签页：弹簧、熔断器等 */
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PARTS =
+            TABS.register("parts", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.voltcraft.parts"))
+                    .icon(() -> ModItems.SPRING.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.SPRING.get());
+                        output.accept(ModItems.FUSE.get());
+                    })
+                    .build());
+
     private ModCreativeTabs() {}
 
     public static void register(IEventBus modEventBus) {
