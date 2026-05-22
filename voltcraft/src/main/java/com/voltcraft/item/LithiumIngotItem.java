@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 public class LithiumIngotItem extends Item {
 
     private static final int BURN_DURATION = 200; // 10秒
-    private static final float FLOAT_UP_SPEED = 0.25f; // 上浮速度
+    private static final float FLOAT_UP_SPEED = 0.1f; // 上浮速度
 
     public LithiumIngotItem(Properties properties) {
         super(properties);
