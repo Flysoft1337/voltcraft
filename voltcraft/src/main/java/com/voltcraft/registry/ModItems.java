@@ -8,6 +8,8 @@ import com.voltcraft.item.LithiumIngotItem;
 import com.voltcraft.item.SodiumIngotItem;
 import com.voltcraft.item.TestTubeItem;
 import com.voltcraft.item.ToolItem;
+import com.voltcraft.item.WireCoilItem;
+import com.voltcraft.electric.WireType;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -175,6 +177,54 @@ public final class ModItems {
     public static final DeferredItem<Item> LEAD_PLATE = ITEMS.register(
             "lead_plate",
             () -> new Item(new Item.Properties())
+    );
+
+    // Silver items (from argentite ore)
+    public static final DeferredItem<Item> RAW_ARGENTITE = ITEMS.register(
+            "raw_argentite",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> SILVER_INGOT = ITEMS.register(
+            "silver_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> SILVER_PLATE = ITEMS.register(
+            "silver_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Tin items (from cassiterite ore)
+    public static final DeferredItem<Item> RAW_CASSITERITE = ITEMS.register(
+            "raw_cassiterite",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> TIN_INGOT = ITEMS.register(
+            "tin_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> TIN_PLATE = ITEMS.register(
+            "tin_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Wire coil items
+    public static final DeferredItem<WireCoilItem> COPPER_WIRE_COIL = ITEMS.register(
+            "copper_wire_coil",
+            () -> new WireCoilItem(WireType.COPPER, new Item.Properties())
+    );
+
+    public static final DeferredItem<WireCoilItem> TIN_WIRE_COIL = ITEMS.register(
+            "tin_wire_coil",
+            () -> new WireCoilItem(WireType.TIN, new Item.Properties())
+    );
+
+    public static final DeferredItem<WireCoilItem> SILVER_WIRE_COIL = ITEMS.register(
+            "silver_wire_coil",
+            () -> new WireCoilItem(WireType.SILVER, new Item.Properties())
     );
 
     private ModItems() {}

@@ -1,11 +1,13 @@
 package com.voltcraft.blockentity;
 
 import com.voltcraft.block.BreakerBlock;
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.electric.CableTier;
-import com.voltcraft.electric.network.EnergyNetwork;
-import com.voltcraft.electric.network.NetworkManager;
 import com.voltcraft.electric.protection.BreakerState;
+import com.voltcraft.electric.wire.IWireConnectable;
+import com.voltcraft.electric.wire.WireEndpoint;
+import com.voltcraft.electric.wire.WireConnection;
+import com.voltcraft.electric.wire.WireNetwork;
+import com.voltcraft.electric.wire.WireNetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -17,6 +19,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
+import java.util.List;
+
 /**
  * 空开方块实体。
  *
@@ -27,7 +31,7 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  * 当前阶段把"电流"近似为"通过本空开的 FE/t"。等接线端子完成后，
  * 短路检测会作为独立分支补上。
  */
-public class BreakerBlockEntity extends BlockEntity {
+public class BreakerBlockEntity extends BlockEntity implements IWireConnectable {
 
     private static final String NBT_BUFFER = "Buffer";
     private static final String NBT_STATE = "State";
@@ -90,24 +94,21 @@ public class BreakerBlockEntity extends BlockEntity {
         // 短路检测：扫描上游（输入面）网络是否被端子打了短路标志
         Direction inDir = inputFace();
         BlockPos inPos = getBlockPos().relative(inDir);
-        BlockState inState = level.getBlockState(inPos);
-        if (inState.getBlock() instanceof CableBlock inCable && inCable.tier() == tier) {
-            EnergyNetwork inNet = NetworkManager.get(level).networkAt(inPos);
-            if (inNet != null && inNet.hasShortCircuit()) {
-                trip(level, BreakerState.TRIPPED_SHORT);
-                return;
-            }
+        WireNetwork inNet = WireNetworkManager.get(level).networkAt(inPos);
+        if (inNet != null && inNet.hasShortCircuit()) {
+            trip(level, BreakerState.TRIPPED_SHORT);
+            return;
         }
 
         Direction outDir = outputFace();
         BlockPos outPos = getBlockPos().relative(outDir);
-        BlockState outState = level.getBlockState(outPos);
-        if (!(outState.getBlock() instanceof CableBlock cb) || cb.tier() != tier) {
+
+        // 查找输出端的线缆网络
+        WireNetwork outNet = WireNetworkManager.get(level).networkAt(outPos);
+        if (outNet == null) {
             lastFlow = 0;
             return;
         }
-        EnergyNetwork outNet = NetworkManager.get(level).networkAt(outPos);
-        if (outNet == null) return;
 
         // 下游短路也跳：可能短路源在下游某个端子上
         if (outNet.hasShortCircuit()) {
@@ -197,5 +198,28 @@ public class BreakerBlockEntity extends BlockEntity {
         @Override public int getMaxEnergyStored() { return 0; }
         @Override public boolean canExtract() { return false; }
         @Override public boolean canReceive() { return false; }
+    }
+
+    @Override
+    public List<WireEndpoint> getWireEndpoints(BlockPos pos, BlockState state) {
+        // 断路器有两个连接点：输入端和输出端
+        Direction outputDir = state.getValue(BreakerBlock.FACING);
+        Direction inputDir = outputDir.getOpposite();
+        BlockPos inputPos = pos.relative(inputDir);
+        BlockPos outputPos = pos.relative(outputDir);
+        return List.of(
+            new WireEndpoint(inputPos, 0),  // 输入端
+            new WireEndpoint(outputPos, 1)  // 输出端
+        );
+    }
+
+    @Override
+    public void onWireConnected(WireConnection connection) {
+        // 线缆连接时的回调
+    }
+
+    @Override
+    public void onWireDisconnected(WireConnection connection) {
+        // 线缆断开时的回调
     }
 }

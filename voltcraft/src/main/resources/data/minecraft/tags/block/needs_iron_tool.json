@@ -4,6 +4,10 @@
     "voltcraft:garnierite_ore",
     "voltcraft:deepslate_garnierite_ore",
     "voltcraft:cerussite_ore",
-    "voltcraft:deepslate_cerussite_ore"
+    "voltcraft:deepslate_cerussite_ore",
+    "voltcraft:argentite_ore",
+    "voltcraft:deepslate_argentite_ore",
+    "voltcraft:cassiterite_ore",
+    "voltcraft:deepslate_cassiterite_ore"
   ]
 }

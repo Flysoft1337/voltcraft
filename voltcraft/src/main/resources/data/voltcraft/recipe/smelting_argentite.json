@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "voltcraft:raw_argentite"
+  },
+  "result": {
+    "id": "voltcraft:silver_ingot"
+  },
+  "experience": 0.7,
+  "cookingtime": 200
+}

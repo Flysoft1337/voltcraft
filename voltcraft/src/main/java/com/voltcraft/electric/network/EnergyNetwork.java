@@ -1,6 +1,5 @@
 package com.voltcraft.electric.network;
 
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.VoltageTier;
 import net.minecraft.core.BlockPos;
@@ -218,7 +217,6 @@ public final class EnergyNetwork {
                 if (!seen.add(neighbor)) continue;               // 邻居方块去重
                 BlockEntity be = level.getBlockEntity(neighbor);
                 if (be == null) continue;
-                if (be.getBlockState().getBlock() instanceof CableBlock) continue;
                 IEnergyStorage es = level.getCapability(
                         Capabilities.EnergyStorage.BLOCK,
                         neighbor,

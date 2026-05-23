@@ -14,15 +14,12 @@ public final class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, VoltCraft.MOD_ID);
 
-    /** 设备标签页：电缆、变压器、空开、端子、器械 */
+    /** 设备标签页：变压器、空开、端子、器械 */
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EQUIPMENT =
             TABS.register("equipment", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.voltcraft.equipment"))
-                    .icon(() -> ModBlocks.CABLES.get(CableTier.LOW).get().asItem().getDefaultInstance())
+                    .icon(() -> ModBlocks.TRANSFORMERS.get(CableTier.LOW).get().asItem().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        for (CableTier tier : CableTier.values()) {
-                            output.accept(ModBlocks.CABLES.get(tier).get());
-                        }
                         for (CableTier tier : CableTier.values()) {
                             output.accept(ModBlocks.TRANSFORMERS.get(tier).get());
                         }
@@ -64,6 +61,14 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.LITHIUM_INGOT.get());
                         output.accept(ModItems.SODIUM_INGOT.get());
                         output.accept(ModItems.SODIUM_OXIDE_INGOT.get());
+                        output.accept(ModBlocks.ARGENTITE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_ARGENTITE_ORE.get());
+                        output.accept(ModItems.RAW_ARGENTITE.get());
+                        output.accept(ModItems.SILVER_INGOT.get());
+                        output.accept(ModBlocks.CASSITERITE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_CASSITERITE_ORE.get());
+                        output.accept(ModItems.RAW_CASSITERITE.get());
+                        output.accept(ModItems.TIN_INGOT.get());
                     })
                     .build());
 
@@ -82,6 +87,9 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.TEST_TUBE.get());
                         output.accept(ModItems.TEST_TUBE_ELECTROLYTE_PASTE.get());
                         output.accept(ModItems.FLASK.get());
+                        output.accept(ModItems.COPPER_WIRE_COIL.get());
+                        output.accept(ModItems.TIN_WIRE_COIL.get());
+                        output.accept(ModItems.SILVER_WIRE_COIL.get());
                     })
                     .build());
 
@@ -99,6 +107,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.MANGANESE_PLATE.get());
                         output.accept(ModItems.NICKEL_PLATE.get());
                         output.accept(ModItems.LEAD_PLATE.get());
+                        output.accept(ModItems.SILVER_PLATE.get());
+                        output.accept(ModItems.TIN_PLATE.get());
                     })
                     .build());
 

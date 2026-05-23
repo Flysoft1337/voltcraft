@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "voltcraft:spring"
+    },
+    {
+      "item": "voltcraft:silver_ingot"
+    }
+  ],
+  "result": {
+    "id": "voltcraft:silver_wire_coil",
+    "count": 1
+  }
+}

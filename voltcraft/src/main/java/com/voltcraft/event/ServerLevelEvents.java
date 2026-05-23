@@ -2,6 +2,7 @@ package com.voltcraft.event;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.electric.network.NetworkManager;
+import com.voltcraft.electric.wire.WireNetworkManager;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -21,6 +22,7 @@ public final class ServerLevelEvents {
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() instanceof Level lvl && !lvl.isClientSide) {
             NetworkManager.onLevelUnload(lvl);
+            WireNetworkManager.onLevelUnload(lvl);
         }
     }
 
@@ -29,6 +31,7 @@ public final class ServerLevelEvents {
         Level level = event.getLevel();
         if (!level.isClientSide) {
             NetworkManager.get(level).tickAll(level);
+            WireNetworkManager.get(level).tickAll(level);
         }
     }
 }

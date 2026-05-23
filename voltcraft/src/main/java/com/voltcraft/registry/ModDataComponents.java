@@ -2,6 +2,7 @@ package com.voltcraft.registry;
 
 import com.mojang.serialization.Codec;
 import com.voltcraft.VoltCraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -25,6 +26,12 @@ public final class ModDataComponents {
             COMPONENTS.registerComponentType("oxidation_start_time", builder -> builder
                     .persistent(Codec.LONG)
                     .networkSynchronized(ByteBufCodecs.VAR_LONG));
+
+    /** 线圈起始位置（用于线缆连接） */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> WIRE_START_POS =
+            COMPONENTS.registerComponentType("wire_start_pos", builder -> builder
+                    .persistent(BlockPos.CODEC)
+                    .networkSynchronized(BlockPos.STREAM_CODEC));
 
     private ModDataComponents() {}
 

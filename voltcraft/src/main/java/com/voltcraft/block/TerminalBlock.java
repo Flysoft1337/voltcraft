@@ -3,6 +3,7 @@ package com.voltcraft.block;
 import com.voltcraft.blockentity.TerminalBlockEntity;
 import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.protection.WiringState;
+import com.voltcraft.electric.wire.WireNetworkManager;
 import com.voltcraft.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -97,5 +98,14 @@ public class TerminalBlock extends Block implements EntityBlock {
                     Component.translatable("voltcraft.wiring." + next.getSerializedName())), true);
         }
         return InteractionResult.CONSUME;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!level.isClientSide && !state.is(newState.getBlock())) {
+            WireNetworkManager.get(level).removeConnectionsAt(pos, level);
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 }

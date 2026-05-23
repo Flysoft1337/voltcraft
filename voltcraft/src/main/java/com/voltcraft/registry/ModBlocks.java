@@ -2,12 +2,10 @@ package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.BreakerBlock;
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.block.ElectrolyzerBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.electric.CableTier;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -27,7 +25,6 @@ public final class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS =
             DeferredRegister.createBlocks(VoltCraft.MOD_ID);
 
-    public static final Map<CableTier, DeferredBlock<CableBlock>> CABLES = createCables();
     public static final Map<CableTier, DeferredBlock<TransformerBlock>> TRANSFORMERS = createTransformers();
     public static final Map<CableTier, DeferredBlock<BreakerBlock>> BREAKERS = createBreakers();
     public static final Map<CableTier, DeferredBlock<TerminalBlock>> TERMINALS = createTerminals();
@@ -137,6 +134,48 @@ public final class ModBlocks {
                     .requiresCorrectToolForDrops())
     );
 
+    // Argentite ore blocks (silver ore)
+    public static final DeferredBlock<Block> ARGENTITE_ORE = registerWithItem(
+            "argentite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .destroyTime(3.0f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    public static final DeferredBlock<Block> DEEPSLATE_ARGENTITE_ORE = registerWithItem(
+            "deepslate_argentite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DEEPSLATE)
+                    .destroyTime(4.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    // Cassiterite ore blocks (tin ore)
+    public static final DeferredBlock<Block> CASSITERITE_ORE = registerWithItem(
+            "cassiterite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .destroyTime(3.0f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    public static final DeferredBlock<Block> DEEPSLATE_CASSITERITE_ORE = registerWithItem(
+            "deepslate_cassiterite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DEEPSLATE)
+                    .destroyTime(4.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops())
+    );
+
     // Electrolyzer block
     public static final DeferredBlock<ElectrolyzerBlock> ELECTROLYZER = registerWithItem(
             "electrolyzer",
@@ -147,21 +186,6 @@ public final class ModBlocks {
                     .sound(SoundType.METAL)
                     .requiresCorrectToolForDrops())
     );
-
-    private static Map<CableTier, DeferredBlock<CableBlock>> createCables() {
-        EnumMap<CableTier, DeferredBlock<CableBlock>> map = new EnumMap<>(CableTier.class);
-        for (CableTier tier : CableTier.values()) {
-            map.put(tier, registerWithItem(
-                    tier.blockName(),
-                    () -> new CableBlock(tier, BlockBehaviour.Properties.of()
-                            .mapColor(mapColorFor(tier))
-                            .strength(0.4f)
-                            .sound(SoundType.WOOL)
-                            .noOcclusion())
-            ));
-        }
-        return Map.copyOf(map);
-    }
 
     private static Map<CableTier, DeferredBlock<TransformerBlock>> createTransformers() {
         EnumMap<CableTier, DeferredBlock<TransformerBlock>> map = new EnumMap<>(CableTier.class);
@@ -206,15 +230,6 @@ public final class ModBlocks {
             ));
         }
         return Map.copyOf(map);
-    }
-
-    private static MapColor mapColorFor(CableTier tier) {
-        return switch (tier) {
-            case LOW -> MapColor.COLOR_GRAY;
-            case MEDIUM -> MapColor.COLOR_BLUE;
-            case HIGH -> MapColor.COLOR_ORANGE;
-            case EXTRA_HIGH -> MapColor.COLOR_RED;
-        };
     }
 
     private ModBlocks() {}

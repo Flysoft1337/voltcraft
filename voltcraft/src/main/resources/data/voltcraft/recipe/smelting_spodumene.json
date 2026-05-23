@@ -4,7 +4,7 @@
     "item": "voltcraft:raw_spodumene"
   },
   "result": {
-    "item": "voltcraft:lithium_ingot"
+    "id": "voltcraft:lithium_ingot"
   },
   "experience": 0.7,
   "cookingtime": 200
