@@ -2,6 +2,7 @@ package com.voltcraft.blockentity;
 
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.electric.CableTier;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.wire.IWireConnectable;
 import com.voltcraft.electric.wire.WireEndpoint;
 import com.voltcraft.electric.wire.WireConnection;
@@ -80,32 +81,42 @@ public class TransformerBlockEntity extends BlockEntity implements IWireConnecta
         Direction outputDir = getBlockState().getValue(TransformerBlock.FACING);
         BlockPos outputPos = getBlockPos().relative(outputDir);
 
-        // 查找输出端的线缆网络
-        WireNetwork net = WireNetworkManager.get(level).networkAt(outputPos);
-        if (net == null) return;
+        WireNetworkManager manager = WireNetworkManager.get(level);
+        WireNetwork liveNet = manager.networkAt(outputPos, Phase.LIVE);
+        WireNetwork neutralNet = manager.networkAt(outputPos, Phase.NEUTRAL);
+        if (liveNet == null) return;
 
-        // 写入电压标签（幂等）
-        if (net.voltageTag() == null) {
-            net.setVoltageTag(outputTier.voltage());
-        } else if (net.voltageTag() != outputTier.voltage()) {
-            // 电压冲突——后续阶段会触发跳闸；当前阶段静默拒绝输出
-            return;
-        }
+        if (!ensureVoltage(liveNet)) return;
+        if (neutralNet != null && !ensureVoltage(neutralNet)) return;
 
-        // 推送：按损耗扣减，同时受 buffer 余额和电缆 ratedTransfer 上限约束
         int available = inputBuffer.getEnergyStored();
         if (available <= 0) return;
 
         long afterLoss = (long) (available * (1.0 - LOSS_RATE));
         if (afterLoss <= 0) return;
 
-        long pushed = net.pushEnergy(afterLoss, false);
+        long pushed;
+        if (neutralNet != null) {
+            long half = afterLoss / 2;
+            long livePushed = liveNet.pushEnergy(half, false);
+            long neutralPushed = neutralNet.pushEnergy(afterLoss - half, false);
+            pushed = livePushed + neutralPushed;
+        } else {
+            pushed = liveNet.pushEnergy(afterLoss, false);
+        }
         if (pushed <= 0) return;
 
-        // 从 buffer 扣除：消费的是损耗前的量
         int consumed = (int) Math.min(Integer.MAX_VALUE, Math.ceil(pushed / (1.0 - LOSS_RATE)));
         consumed = Math.min(consumed, available);
         inputBuffer.extractEnergy(consumed, false);
+    }
+
+    private boolean ensureVoltage(WireNetwork net) {
+        if (net.voltageTag() == null) {
+            net.setVoltageTag(outputTier.voltage());
+            return true;
+        }
+        return net.voltageTag() == outputTier.voltage();
     }
 
     @Override
@@ -134,10 +145,13 @@ public class TransformerBlockEntity extends BlockEntity implements IWireConnecta
 
     @Override
     public List<WireEndpoint> getWireEndpoints(BlockPos pos, BlockState state) {
-        // 变压器在高压侧暴露一个连接点
         Direction outputDir = state.getValue(TransformerBlock.FACING);
         BlockPos outputPos = pos.relative(outputDir);
-        return List.of(new WireEndpoint(outputPos, 0));
+        return List.of(
+                new WireEndpoint(outputPos, 0, Phase.LIVE),
+                new WireEndpoint(outputPos, 1, Phase.NEUTRAL),
+                new WireEndpoint(outputPos, 2, Phase.EARTH)
+        );
     }
 
     @Override

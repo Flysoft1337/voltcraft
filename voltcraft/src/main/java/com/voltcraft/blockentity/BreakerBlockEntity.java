@@ -2,6 +2,7 @@ package com.voltcraft.blockentity;
 
 import com.voltcraft.block.BreakerBlock;
 import com.voltcraft.electric.CableTier;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.protection.BreakerState;
 import com.voltcraft.electric.wire.IWireConnectable;
 import com.voltcraft.electric.wire.WireEndpoint;
@@ -91,45 +92,54 @@ public class BreakerBlockEntity extends BlockEntity implements IWireConnectable 
             return;
         }
 
-        // 短路检测：扫描上游（输入面）网络是否被端子打了短路标志
         Direction inDir = inputFace();
         BlockPos inPos = getBlockPos().relative(inDir);
-        WireNetwork inNet = WireNetworkManager.get(level).networkAt(inPos);
-        if (inNet != null && inNet.hasShortCircuit()) {
+        Direction outDir = outputFace();
+        BlockPos outPos = getBlockPos().relative(outDir);
+
+        WireNetworkManager manager = WireNetworkManager.get(level);
+        if (hasShortCircuit(manager, inPos) || hasShortCircuit(manager, outPos)) {
             trip(level, BreakerState.TRIPPED_SHORT);
             return;
         }
 
-        Direction outDir = outputFace();
-        BlockPos outPos = getBlockPos().relative(outDir);
-
-        // 查找输出端的线缆网络
-        WireNetwork outNet = WireNetworkManager.get(level).networkAt(outPos);
-        if (outNet == null) {
+        WireNetwork liveOut = manager.networkAt(outPos, Phase.LIVE);
+        WireNetwork neutralOut = manager.networkAt(outPos, Phase.NEUTRAL);
+        if (liveOut == null) {
             lastFlow = 0;
             return;
         }
 
-        // 下游短路也跳：可能短路源在下游某个端子上
-        if (outNet.hasShortCircuit()) {
-            trip(level, BreakerState.TRIPPED_SHORT);
-            return;
-        }
-
-        // 推 buffer 里的能量到下游电缆网络
         int available = buffer.getEnergyStored();
         if (available <= 0) {
             decayOverload();
             lastFlow = 0;
             return;
         }
-        long pushed = outNet.pushEnergy(available, false);
+
+        long pushed;
+        if (neutralOut != null) {
+            long half = available / 2L;
+            pushed = liveOut.pushEnergy(half, false) + neutralOut.pushEnergy(available - half, false);
+        } else {
+            pushed = liveOut.pushEnergy(available, false);
+        }
         if (pushed > 0) {
             buffer.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
         }
         lastFlow = pushed;
 
         evaluateOverload(level, pushed);
+    }
+
+    private boolean hasShortCircuit(WireNetworkManager manager, BlockPos pos) {
+        for (Phase phase : Phase.values()) {
+            WireNetwork net = manager.networkAt(pos, phase);
+            if (net != null && net.hasShortCircuit()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void evaluateOverload(Level level, long flow) {
@@ -208,8 +218,12 @@ public class BreakerBlockEntity extends BlockEntity implements IWireConnectable 
         BlockPos inputPos = pos.relative(inputDir);
         BlockPos outputPos = pos.relative(outputDir);
         return List.of(
-            new WireEndpoint(inputPos, 0),  // 输入端
-            new WireEndpoint(outputPos, 1)  // 输出端
+                new WireEndpoint(inputPos, 0, Phase.LIVE),
+                new WireEndpoint(inputPos, 1, Phase.NEUTRAL),
+                new WireEndpoint(inputPos, 2, Phase.EARTH),
+                new WireEndpoint(outputPos, 0, Phase.LIVE),
+                new WireEndpoint(outputPos, 1, Phase.NEUTRAL),
+                new WireEndpoint(outputPos, 2, Phase.EARTH)
         );
     }
 

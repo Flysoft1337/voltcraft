@@ -2,6 +2,7 @@ package com.voltcraft.blockentity;
 
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.electric.CableTier;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.protection.WiringState;
 import com.voltcraft.electric.wire.IWireConnectable;
 import com.voltcraft.electric.wire.WireEndpoint;
@@ -83,19 +84,21 @@ public class TerminalBlockEntity extends BlockEntity implements IWireConnectable
         WiringState wiring = wiring();
         BlockPos cablePos = getBlockPos().relative(cableFace());
 
-        // 查找电缆侧的线缆网络
-        WireNetwork net = WireNetworkManager.get(level).networkAt(cablePos);
+        WireNetworkManager manager = WireNetworkManager.get(level);
+        WireNetwork liveNet = manager.networkAt(cablePos, Phase.LIVE);
+        WireNetwork neutralNet = manager.networkAt(cablePos, Phase.NEUTRAL);
+        WireNetwork earthNet = manager.networkAt(cablePos, Phase.EARTH);
 
-        // 短路：把标志写到电缆侧网络，并清空 buffer
         if (wiring.isShort()) {
-            if (net != null) net.reportShortCircuit(getBlockPos());
+            if (liveNet != null) liveNet.reportShortCircuit(getBlockPos());
+            if (neutralNet != null) neutralNet.reportShortCircuit(getBlockPos());
+            if (earthNet != null) earthNet.reportShortCircuit(getBlockPos());
             buffer.extractEnergy(buffer.getEnergyStored(), false);
             lastFlow = 0;
             return;
         }
 
-        // 正常导通：推 buffer 到网络
-        if (net == null) {
+        if (liveNet == null) {
             lastFlow = 0;
             return;
         }
@@ -104,7 +107,14 @@ public class TerminalBlockEntity extends BlockEntity implements IWireConnectable
             lastFlow = 0;
             return;
         }
-        long pushed = net.pushEnergy(available, false);
+
+        long pushed;
+        if (neutralNet != null) {
+            long half = available / 2L;
+            pushed = liveNet.pushEnergy(half, false) + neutralNet.pushEnergy(available - half, false);
+        } else {
+            pushed = liveNet.pushEnergy(available, false);
+        }
         if (pushed > 0) {
             buffer.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
         }
@@ -138,10 +148,13 @@ public class TerminalBlockEntity extends BlockEntity implements IWireConnectable
 
     @Override
     public List<WireEndpoint> getWireEndpoints(BlockPos pos, BlockState state) {
-        // 端子在电缆侧暴露一个连接点
         Direction cableDir = state.getValue(TerminalBlock.FACING);
         BlockPos cablePos = pos.relative(cableDir);
-        return List.of(new WireEndpoint(cablePos, 0));
+        return List.of(
+                new WireEndpoint(cablePos, 0, Phase.LIVE),
+                new WireEndpoint(cablePos, 1, Phase.NEUTRAL),
+                new WireEndpoint(cablePos, 2, Phase.EARTH)
+        );
     }
 
     @Override
