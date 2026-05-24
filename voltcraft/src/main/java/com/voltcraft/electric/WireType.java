@@ -37,6 +37,15 @@ public enum WireType implements StringRepresentable {
         return tier.voltage();
     }
 
+    public static WireType byName(String name) {
+        for (WireType type : values()) {
+            if (type.name.equals(name)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String getSerializedName() {
         return name;

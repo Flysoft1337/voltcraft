@@ -3,9 +3,11 @@ package com.voltcraft.event;
 import com.voltcraft.VoltCraft;
 import com.voltcraft.electric.network.NetworkManager;
 import com.voltcraft.electric.wire.WireNetworkManager;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
@@ -32,6 +34,13 @@ public final class ServerLevelEvents {
         if (!level.isClientSide) {
             NetworkManager.get(level).tickAll(level);
             WireNetworkManager.get(level).tickAll(level);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            WireNetworkManager.get(player.level()).syncToPlayer(player);
         }
     }
 }

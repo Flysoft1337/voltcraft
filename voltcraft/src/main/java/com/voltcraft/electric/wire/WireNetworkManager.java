@@ -31,7 +31,16 @@ public final class WireNetworkManager {
         if (!(level instanceof Level lvl) || lvl.isClientSide) {
             throw new IllegalStateException("WireNetworkManager is server-side only");
         }
-        return INSTANCES.computeIfAbsent(lvl.dimension(), k -> new WireNetworkManager());
+        return INSTANCES.computeIfAbsent(lvl.dimension(), k -> {
+            WireNetworkManager manager = new WireNetworkManager();
+            if (lvl instanceof ServerLevel serverLevel) {
+                manager.load(serverLevel.getDataStorage().computeIfAbsent(
+                        WireNetworkSavedData.FACTORY,
+                        WireNetworkSavedData.ID
+                ).connections());
+            }
+            return manager;
+        });
     }
 
     /**
@@ -48,6 +57,12 @@ public final class WireNetworkManager {
     private final Set<WireNetwork> allNetworks = new HashSet<>();
 
     private WireNetworkManager() {}
+
+    private void load(Set<WireConnection> connections) {
+        for (WireConnection connection : connections) {
+            addConnectionInternal(connection);
+        }
+    }
 
     /**
      * 添加一条连接。
@@ -74,23 +89,22 @@ public final class WireNetworkManager {
             return null;
         }
 
-        // 查找或创建网络
-        WireNetwork network = findOrCreateNetwork(start, end, wireType);
-
-        // 添加连接
-        network.addConnection(newConn);
-        allConnections.add(newConn);
-
-        // 更新端点索引
-        addToEndpointIndex(start.pos(), network);
-        addToEndpointIndex(end.pos(), network);
+        addConnectionInternal(newConn);
+        markSavedDataDirty(level);
 
         VoltCraft.LOGGER.debug("Connection added: {}", newConn);
 
-        // 同步到客户端
         syncToClients(level);
 
         return newConn;
+    }
+
+    private void addConnectionInternal(WireConnection connection) {
+        WireNetwork network = findOrCreateNetwork(connection.start(), connection.end(), connection.wireType());
+        network.addConnection(connection);
+        allConnections.add(connection);
+        addToEndpointIndex(connection.start().pos(), network);
+        addToEndpointIndex(connection.end().pos(), network);
     }
 
     /**
@@ -156,8 +170,8 @@ public final class WireNetworkManager {
             removeConnection(conn);
         }
 
-        // 同步到客户端
-        if (level != null) {
+        if (!toRemove.isEmpty() && level != null) {
+            markSavedDataDirty(level);
             syncToClients(level);
         }
     }
@@ -400,6 +414,18 @@ public final class WireNetworkManager {
         return allNetworks.size();
     }
 
+    public void syncToPlayer(ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, buildSyncPacket());
+    }
+
+    private void markSavedDataDirty(Level level) {
+        if (level instanceof ServerLevel serverLevel) {
+            serverLevel.getDataStorage()
+                    .computeIfAbsent(WireNetworkSavedData.FACTORY, WireNetworkSavedData.ID)
+                    .replaceConnections(allConnections);
+        }
+    }
+
     /**
      * 同步所有连接到客户端。
      */
@@ -408,6 +434,13 @@ public final class WireNetworkManager {
             return;
         }
 
+        WireConnectionSyncPacket packet = buildSyncPacket();
+        for (ServerPlayer player : serverLevel.players()) {
+            PacketDistributor.sendToPlayer(player, packet);
+        }
+    }
+
+    private WireConnectionSyncPacket buildSyncPacket() {
         Set<WireConnectionData> data = new HashSet<>();
         for (WireConnection conn : allConnections) {
             data.add(new WireConnectionData(
@@ -418,10 +451,6 @@ public final class WireNetworkManager {
                     conn.wireType()
             ));
         }
-
-        WireConnectionSyncPacket packet = new WireConnectionSyncPacket(data);
-        for (ServerPlayer player : serverLevel.players()) {
-            PacketDistributor.sendToPlayer(player, packet);
-        }
+        return new WireConnectionSyncPacket(data);
     }
 }
