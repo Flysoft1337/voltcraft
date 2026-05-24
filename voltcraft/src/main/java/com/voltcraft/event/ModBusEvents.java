@@ -53,32 +53,17 @@ public final class ModBusEvents {
                 }
         );
 
-        // 水解槽：背面输入能量，左侧输入物品，右侧输出物品
+        // 电解槽：背面输入能量，左侧输入物品，右侧输出物品
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.ELECTROLYZER.get(),
-                (ElectrolyzerBlockEntity be, Direction side) -> {
-                    if (side == null) return be.getEnergyStorage();
-                    Direction facing = be.getBlockState().getValue(ElectrolyzerBlock.FACING);
-                    return side == facing.getOpposite() ? be.getEnergyStorage() : null;
-                }
+                (ElectrolyzerBlockEntity be, Direction side) -> be.getEnergyHandler(side)
         );
 
         event.registerBlockEntity(
                 Capabilities.ItemHandler.BLOCK,
                 ModBlockEntities.ELECTROLYZER.get(),
-                (ElectrolyzerBlockEntity be, Direction side) -> {
-                    if (side == null) return be.getItemHandler();
-                    Direction facing = be.getBlockState().getValue(ElectrolyzerBlock.FACING);
-                    Direction left = facing.getCounterClockWise();
-                    Direction right = facing.getClockWise();
-                    if (side == left) {
-                        return be.getItemHandler(); // 左侧输入
-                    } else if (side == right) {
-                        return be.getItemHandler(); // 右侧输出（需要区分）
-                    }
-                    return null;
-                }
+                (ElectrolyzerBlockEntity be, Direction side) -> be.getItemHandler(side)
         );
     }
 }
