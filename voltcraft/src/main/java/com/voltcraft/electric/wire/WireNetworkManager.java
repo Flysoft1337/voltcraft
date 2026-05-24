@@ -1,6 +1,7 @@
 package com.voltcraft.electric.wire;
 
 import com.voltcraft.VoltCraft;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.WireType;
 import com.voltcraft.network.WireConnectionSyncPacket;
 import com.voltcraft.network.WireConnectionSyncPacket.WireConnectionData;
@@ -79,6 +80,11 @@ public final class WireNetworkManager {
         double distance = Math.sqrt(start.pos().distSqr(end.pos()));
         if (distance > wireType.maxDistance()) {
             VoltCraft.LOGGER.debug("Connection rejected: distance {} exceeds max {}", distance, wireType.maxDistance());
+            return null;
+        }
+
+        if (start.phase() != end.phase()) {
+            VoltCraft.LOGGER.debug("Connection rejected: phase mismatch {} -> {}", start.phase(), end.phase());
             return null;
         }
 
@@ -190,22 +196,20 @@ public final class WireNetworkManager {
         allRelated.addAll(startNets);
         allRelated.addAll(endNets);
 
-        // 过滤出相同类型的网络
-        List<WireNetwork> sameType = allRelated.stream()
-                .filter(n -> n.wireType() == wireType)
+        Phase phase = start.phase();
+        List<WireNetwork> compatible = allRelated.stream()
+                .filter(n -> n.wireType() == wireType && n.phase() == phase)
                 .toList();
 
-        if (sameType.isEmpty()) {
-            // 创建新网络
-            WireNetwork newNet = new WireNetwork(wireType);
+        if (compatible.isEmpty()) {
+            WireNetwork newNet = new WireNetwork(wireType, phase);
             allNetworks.add(newNet);
             return newNet;
         }
 
-        // 合并网络
-        WireNetwork primary = sameType.get(0);
-        for (int i = 1; i < sameType.size(); i++) {
-            WireNetwork other = sameType.get(i);
+        WireNetwork primary = compatible.get(0);
+        for (int i = 1; i < compatible.size(); i++) {
+            WireNetwork other = compatible.get(i);
             mergeNetworks(primary, other);
         }
 
@@ -261,7 +265,7 @@ public final class WireNetworkManager {
         toSplit.removeAll(keep);
 
         // 创建新网络
-        WireNetwork newNet = new WireNetwork(network.wireType());
+        WireNetwork newNet = new WireNetwork(network.wireType(), network.phase());
         allNetworks.add(newNet);
 
         // 移动连接到新网络
@@ -357,11 +361,27 @@ public final class WireNetworkManager {
      */
     @Nullable
     public WireNetwork networkAt(BlockPos pos) {
+        WireNetwork live = networkAt(pos, Phase.LIVE);
+        if (live != null) return live;
         Set<WireNetwork> nets = networksByEndpoint.get(pos);
         if (nets == null || nets.isEmpty()) {
             return null;
         }
         return nets.iterator().next();
+    }
+
+    @Nullable
+    public WireNetwork networkAt(BlockPos pos, Phase phase) {
+        Set<WireNetwork> nets = networksByEndpoint.get(pos);
+        if (nets == null || nets.isEmpty()) {
+            return null;
+        }
+        for (WireNetwork net : nets) {
+            if (net.phase() == phase) {
+                return net;
+            }
+        }
+        return null;
     }
 
     /**

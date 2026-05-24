@@ -1,6 +1,7 @@
 package com.voltcraft.electric.wire;
 
 import com.voltcraft.electric.CableTier;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.VoltageTier;
 import com.voltcraft.electric.WireType;
 import net.minecraft.core.BlockPos;
@@ -21,6 +22,7 @@ public class WireNetwork {
 
     private final UUID id = UUID.randomUUID();
     private final WireType wireType;
+    private final Phase phase;
     private final Set<WireConnection> connections = new HashSet<>();
     private final Set<BlockPos> endpoints = new HashSet<>();
 
@@ -41,8 +43,9 @@ public class WireNetwork {
     private int shortCircuitStaleTicks;
     private static final int SHORT_STALE_THRESHOLD = 20; // 1s 没续写就清空
 
-    public WireNetwork(WireType wireType) {
+    public WireNetwork(WireType wireType, Phase phase) {
         this.wireType = wireType;
+        this.phase = phase;
     }
 
     public UUID id() {
@@ -51,6 +54,10 @@ public class WireNetwork {
 
     public WireType wireType() {
         return wireType;
+    }
+
+    public Phase phase() {
+        return phase;
     }
 
     public CableTier cableTier() {
@@ -79,6 +86,9 @@ public class WireNetwork {
      * @param connection 要添加的连接
      */
     public void addConnection(WireConnection connection) {
+        if (connection.start().phase() != phase || connection.end().phase() != phase) {
+            throw new IllegalArgumentException("Connection phase does not match network phase");
+        }
         connections.add(connection);
         endpoints.add(connection.start().pos().immutable());
         endpoints.add(connection.end().pos().immutable());
@@ -275,7 +285,7 @@ public class WireNetwork {
 
     @Override
     public String toString() {
-        return "WireNetwork{id=" + id + ", type=" + wireType
+        return "WireNetwork{id=" + id + ", type=" + wireType + ", phase=" + phase
                 + ", voltage=" + voltageTag + ", endpoints=" + endpoints.size()
                 + ", connections=" + connections.size() + "}";
     }
