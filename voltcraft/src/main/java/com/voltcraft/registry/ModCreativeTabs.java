@@ -14,15 +14,12 @@ public final class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, VoltCraft.MOD_ID);
 
-    /** 设备标签页：电缆、变压器、空开、端子 */
+    /** 设备标签页：变压器、空开、端子、器械 */
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EQUIPMENT =
             TABS.register("equipment", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.voltcraft.equipment"))
-                    .icon(() -> ModBlocks.CABLES.get(CableTier.LOW).get().asItem().getDefaultInstance())
+                    .icon(() -> ModBlocks.TRANSFORMERS.get(CableTier.LOW).get().asItem().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        for (CableTier tier : CableTier.values()) {
-                            output.accept(ModBlocks.CABLES.get(tier).get());
-                        }
                         for (CableTier tier : CableTier.values()) {
                             output.accept(ModBlocks.TRANSFORMERS.get(tier).get());
                         }
@@ -32,6 +29,7 @@ public final class ModCreativeTabs {
                         for (CableTier tier : CableTier.values()) {
                             output.accept(ModBlocks.TERMINALS.get(tier).get());
                         }
+                        output.accept(ModBlocks.ELECTROLYZER.get());
                     })
                     .build());
 
@@ -57,10 +55,24 @@ public final class ModCreativeTabs {
                         output.accept(ModBlocks.DEEPSLATE_CERUSSITE_ORE.get());
                         output.accept(ModItems.RAW_LEAD.get());
                         output.accept(ModItems.LEAD_INGOT.get());
+                        output.accept(ModBlocks.SPODUMENE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_SPODUMENE_ORE.get());
+                        output.accept(ModItems.RAW_SPODUMENE.get());
+                        output.accept(ModItems.LITHIUM_INGOT.get());
+                        output.accept(ModItems.SODIUM_INGOT.get());
+                        output.accept(ModItems.SODIUM_OXIDE_INGOT.get());
+                        output.accept(ModBlocks.ARGENTITE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_ARGENTITE_ORE.get());
+                        output.accept(ModItems.RAW_ARGENTITE.get());
+                        output.accept(ModItems.SILVER_INGOT.get());
+                        output.accept(ModBlocks.CASSITERITE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_CASSITERITE_ORE.get());
+                        output.accept(ModItems.RAW_CASSITERITE.get());
+                        output.accept(ModItems.TIN_INGOT.get());
                     })
                     .build());
 
-    /** 零部件标签页：弹簧、熔断器等 */
+    /** 零部件标签页：弹簧、熔断器、螺丝等 */
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PARTS =
             TABS.register("parts", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.voltcraft.parts"))
@@ -68,11 +80,35 @@ public final class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SPRING.get());
                         output.accept(ModItems.FUSE.get());
+                        output.accept(ModItems.SCREW.get());
+                        output.accept(ModItems.BRINE_BUCKET.get());
                         output.accept(ModItems.ZINC_MANGANESE_BATTERY.get());
                         output.accept(ModItems.CARBON_ROD.get());
                         output.accept(ModItems.TEST_TUBE.get());
                         output.accept(ModItems.TEST_TUBE_ELECTROLYTE_PASTE.get());
                         output.accept(ModItems.FLASK.get());
+                        output.accept(ModItems.COPPER_WIRE_COIL.get());
+                        output.accept(ModItems.TIN_WIRE_COIL.get());
+                        output.accept(ModItems.SILVER_WIRE_COIL.get());
+                    })
+                    .build());
+
+    /** 工具标签页：锤子、扳手、护目镜、金属板 */
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TOOLS =
+            TABS.register("tools", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.voltcraft.tools"))
+                    .icon(() -> ModItems.HAMMER.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.HAMMER.get());
+                        output.accept(ModItems.WRENCH.get());
+                        output.accept(ModItems.GOGGLES.get());
+                        output.accept(ModItems.IRON_PLATE.get());
+                        output.accept(ModItems.ZINC_PLATE.get());
+                        output.accept(ModItems.MANGANESE_PLATE.get());
+                        output.accept(ModItems.NICKEL_PLATE.get());
+                        output.accept(ModItems.LEAD_PLATE.get());
+                        output.accept(ModItems.SILVER_PLATE.get());
+                        output.accept(ModItems.TIN_PLATE.get());
                     })
                     .build());
 

@@ -1,11 +1,13 @@
 package com.voltcraft.blockentity;
 
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.electric.CableTier;
-import com.voltcraft.electric.network.EnergyNetwork;
-import com.voltcraft.electric.network.NetworkManager;
 import com.voltcraft.electric.protection.WiringState;
+import com.voltcraft.electric.wire.IWireConnectable;
+import com.voltcraft.electric.wire.WireEndpoint;
+import com.voltcraft.electric.wire.WireConnection;
+import com.voltcraft.electric.wire.WireNetwork;
+import com.voltcraft.electric.wire.WireNetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -16,6 +18,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+
+import java.util.List;
 
 /**
  * 接线端子方块实体。
@@ -32,7 +36,7 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  * - 网络被打上 shortCircuitSource 标志
  * - 上下游空开会立即 TRIPPED_SHORT
  */
-public class TerminalBlockEntity extends BlockEntity {
+public class TerminalBlockEntity extends BlockEntity implements IWireConnectable {
 
     private static final String NBT_BUFFER = "Buffer";
 
@@ -78,10 +82,9 @@ public class TerminalBlockEntity extends BlockEntity {
 
         WiringState wiring = wiring();
         BlockPos cablePos = getBlockPos().relative(cableFace());
-        BlockState cableState = level.getBlockState(cablePos);
 
-        boolean cableOk = cableState.getBlock() instanceof CableBlock cb && cb.tier() == tier;
-        EnergyNetwork net = cableOk ? NetworkManager.get(level).networkAt(cablePos) : null;
+        // 查找电缆侧的线缆网络
+        WireNetwork net = WireNetworkManager.get(level).networkAt(cablePos);
 
         // 短路：把标志写到电缆侧网络，并清空 buffer
         if (wiring.isShort()) {
@@ -131,5 +134,23 @@ public class TerminalBlockEntity extends BlockEntity {
         @Override public int getMaxEnergyStored() { return 0; }
         @Override public boolean canExtract() { return false; }
         @Override public boolean canReceive() { return false; }
+    }
+
+    @Override
+    public List<WireEndpoint> getWireEndpoints(BlockPos pos, BlockState state) {
+        // 端子在电缆侧暴露一个连接点
+        Direction cableDir = state.getValue(TerminalBlock.FACING);
+        BlockPos cablePos = pos.relative(cableDir);
+        return List.of(new WireEndpoint(cablePos, 0));
+    }
+
+    @Override
+    public void onWireConnected(WireConnection connection) {
+        // 线缆连接时的回调
+    }
+
+    @Override
+    public void onWireDisconnected(WireConnection connection) {
+        // 线缆断开时的回调
     }
 }

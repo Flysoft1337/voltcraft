@@ -1,7 +1,6 @@
 package com.voltcraft.electric.network;
 
 import com.voltcraft.VoltCraft;
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.electric.CableTier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -197,8 +196,8 @@ public final class NetworkManager {
     }
 
     private static boolean isCableOfTier(Level level, BlockPos pos, CableTier tier) {
-        BlockState s = level.getBlockState(pos);
-        return s.getBlock() instanceof CableBlock cb && cb.tier() == tier;
+        // 旧的方块线缆系统已弃用，现在使用线圈连接系统
+        return false;
     }
 
     /** 仅供调试/测试。 */

@@ -1,10 +1,12 @@
 package com.voltcraft.blockentity;
 
-import com.voltcraft.block.CableBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.electric.CableTier;
-import com.voltcraft.electric.network.EnergyNetwork;
-import com.voltcraft.electric.network.NetworkManager;
+import com.voltcraft.electric.wire.IWireConnectable;
+import com.voltcraft.electric.wire.WireEndpoint;
+import com.voltcraft.electric.wire.WireConnection;
+import com.voltcraft.electric.wire.WireNetwork;
+import com.voltcraft.electric.wire.WireNetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -17,6 +19,8 @@ import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * 变压器方块实体。
  *
@@ -24,12 +28,12 @@ import org.jetbrains.annotations.Nullable;
  *   外部 mod → inputBuffer (IEnergyStorage) → serverTick 推入高压侧网络（损耗 1%）
  *
  * 输出策略：
- * - 仅在 FACING 方向必须是对应 CableTier 的电缆才推送
+ * - 通过线缆连接输出能量
  * - 推送同时写入网络电压标签
  *
  * 损耗模型（设计文档 2.2.3）：功率守恒，FE/t 为功率单位，所以 FE 数值不变，仅扣损耗。
  */
-public class TransformerBlockEntity extends BlockEntity {
+public class TransformerBlockEntity extends BlockEntity implements IWireConnectable {
 
     private static final String NBT_INPUT_BUFFER = "InputBuffer";
 
@@ -65,7 +69,7 @@ public class TransformerBlockEntity extends BlockEntity {
 
     /**
      * 服务端每 tick 调用：
-     * 1. 检查 FACING 方向是否接同等级电缆
+     * 1. 查找输出端的线缆网络
      * 2. 写入电压标签
      * 3. 从 inputBuffer 抽取并推入网络（按 LOSS_RATE 扣损耗）
      */
@@ -76,12 +80,8 @@ public class TransformerBlockEntity extends BlockEntity {
         Direction outputDir = getBlockState().getValue(TransformerBlock.FACING);
         BlockPos outputPos = getBlockPos().relative(outputDir);
 
-        BlockState outputState = level.getBlockState(outputPos);
-        if (!(outputState.getBlock() instanceof CableBlock cb) || cb.tier() != outputTier) {
-            return; // 高压侧没接对，本 tick 不工作
-        }
-
-        EnergyNetwork net = NetworkManager.get(level).networkAt(outputPos);
+        // 查找输出端的线缆网络
+        WireNetwork net = WireNetworkManager.get(level).networkAt(outputPos);
         if (net == null) return;
 
         // 写入电压标签（幂等）
@@ -130,5 +130,23 @@ public class TransformerBlockEntity extends BlockEntity {
     /** 输入端面（FACING 反方向）。 */
     public Direction inputFace() {
         return outputFace().getOpposite();
+    }
+
+    @Override
+    public List<WireEndpoint> getWireEndpoints(BlockPos pos, BlockState state) {
+        // 变压器在高压侧暴露一个连接点
+        Direction outputDir = state.getValue(TransformerBlock.FACING);
+        BlockPos outputPos = pos.relative(outputDir);
+        return List.of(new WireEndpoint(outputPos, 0));
+    }
+
+    @Override
+    public void onWireConnected(WireConnection connection) {
+        // 线缆连接时的回调
+    }
+
+    @Override
+    public void onWireDisconnected(WireConnection connection) {
+        // 线缆断开时的回调
     }
 }

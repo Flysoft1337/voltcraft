@@ -2,11 +2,11 @@ package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.BreakerBlock;
-import com.voltcraft.block.CableBlock;
+import com.voltcraft.block.ElectrolyzerBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.blockentity.BreakerBlockEntity;
-import com.voltcraft.blockentity.CableBlockEntity;
+import com.voltcraft.blockentity.ElectrolyzerBlockEntity;
 import com.voltcraft.blockentity.TerminalBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.electric.CableTier;
@@ -23,20 +23,6 @@ public final class ModBlockEntities {
 
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, VoltCraft.MOD_ID);
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CableBlockEntity>> CABLE =
-            BLOCK_ENTITIES.register("cable", () -> {
-                Block[] cableBlocks = Arrays.stream(CableTier.values())
-                        .map(tier -> ModBlocks.CABLES.get(tier).get())
-                        .toArray(Block[]::new);
-                return BlockEntityType.Builder.of(
-                        (pos, state) -> {
-                            CableBlock block = (CableBlock) state.getBlock();
-                            return new CableBlockEntity(ModBlockEntities.CABLE.get(), pos, state, block.tier());
-                        },
-                        cableBlocks
-                ).build(null);
-            });
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TransformerBlockEntity>> TRANSFORMER =
             BLOCK_ENTITIES.register("transformer", () -> {
@@ -82,6 +68,14 @@ public final class ModBlockEntities {
                         terminalBlocks
                 ).build(null);
             });
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ElectrolyzerBlockEntity>> ELECTROLYZER =
+            BLOCK_ENTITIES.register("electrolyzer", () ->
+                    BlockEntityType.Builder.of(
+                            ElectrolyzerBlockEntity::new,
+                            ModBlocks.ELECTROLYZER.get()
+                    ).build(null)
+            );
 
     private ModBlockEntities() {}
 

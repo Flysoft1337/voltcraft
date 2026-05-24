@@ -1,7 +1,8 @@
 {
   "type": "minecraft:smelting",
   "ingredient": { "item": "voltcraft:raw_lead" },
-  "result": { "item": "voltcraft:lead_ingot" },
+  "result": {
+    "id": "voltcraft:lead_ingot" },
   "experience": 0.7,
   "cookingtime": 200
 }

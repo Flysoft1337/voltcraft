@@ -3,6 +3,7 @@ package com.voltcraft.block;
 import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.protection.BreakerState;
+import com.voltcraft.electric.wire.WireNetworkManager;
 import com.voltcraft.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -103,5 +104,14 @@ public class BreakerBlock extends Block implements EntityBlock {
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!level.isClientSide && !state.is(newState.getBlock())) {
+            WireNetworkManager.get(level).removeConnectionsAt(pos, level);
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
 }
