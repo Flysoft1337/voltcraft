@@ -446,8 +446,10 @@ public final class WireNetworkManager {
             data.add(new WireConnectionData(
                     conn.start().pos(),
                     conn.start().endpointIndex(),
+                    conn.start().phase(),
                     conn.end().pos(),
                     conn.end().endpointIndex(),
+                    conn.end().phase(),
                     conn.wireType()
             ));
         }

@@ -1,37 +1,28 @@
 package com.voltcraft.electric.wire;
 
+import com.voltcraft.electric.Phase;
 import net.minecraft.core.BlockPos;
 
-/**
- * 线缆连接端点。
- * 表示一个可以连接线缆的位置。
- *
- * @param pos 方块位置
- * @param endpointIndex 端点索引（用于区分同一方块上的多个连接点）
- */
-public record WireEndpoint(BlockPos pos, int endpointIndex) {
+public record WireEndpoint(BlockPos pos, int endpointIndex, Phase phase) {
 
-    /**
-     * 创建一个端点。
-     *
-     * @param pos 方块位置
-     * @param endpointIndex 端点索引
-     */
-    public WireEndpoint {
-        // 不可变记录类
+    public WireEndpoint(BlockPos pos, int endpointIndex) {
+        this(pos, endpointIndex, phaseFromIndex(endpointIndex));
     }
 
-    /**
-     * 获取端点的世界坐标（方块中心）。
-     *
-     * @return 世界坐标
-     */
     public net.minecraft.world.phys.Vec3 getWorldPosition() {
         return net.minecraft.world.phys.Vec3.atCenterOf(pos);
     }
 
+    public static Phase phaseFromIndex(int endpointIndex) {
+        return switch (Math.floorMod(endpointIndex, 3)) {
+            case 0 -> Phase.LIVE;
+            case 1 -> Phase.NEUTRAL;
+            default -> Phase.EARTH;
+        };
+    }
+
     @Override
     public String toString() {
-        return "WireEndpoint{" + pos.toShortString() + ", index=" + endpointIndex + "}";
+        return "WireEndpoint{" + pos.toShortString() + ", index=" + endpointIndex + ", phase=" + phase.shortLabel() + "}";
     }
 }

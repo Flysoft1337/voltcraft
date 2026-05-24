@@ -2,6 +2,7 @@ package com.voltcraft.network;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.client.WireRendererState;
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.WireType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -45,8 +46,10 @@ public record WireConnectionSyncPacket(Set<WireConnectionData> connections) impl
         for (WireConnectionData data : packet.connections) {
             writeBlockPos(buf, data.startPos());
             buf.writeVarInt(data.startIndex());
+            buf.writeEnum(data.startPhase());
             writeBlockPos(buf, data.endPos());
             buf.writeVarInt(data.endIndex());
+            buf.writeEnum(data.endPhase());
             buf.writeEnum(data.wireType());
         }
     }
@@ -57,10 +60,12 @@ public record WireConnectionSyncPacket(Set<WireConnectionData> connections) impl
         for (int i = 0; i < count; i++) {
             BlockPos startPos = readBlockPos(buf);
             int startIndex = buf.readVarInt();
+            Phase startPhase = buf.readEnum(Phase.class);
             BlockPos endPos = readBlockPos(buf);
             int endIndex = buf.readVarInt();
+            Phase endPhase = buf.readEnum(Phase.class);
             WireType wireType = buf.readEnum(WireType.class);
-            connections.add(new WireConnectionData(startPos, startIndex, endPos, endIndex, wireType));
+            connections.add(new WireConnectionData(startPos, startIndex, startPhase, endPos, endIndex, endPhase, wireType));
         }
         return new WireConnectionSyncPacket(connections);
     }
@@ -82,5 +87,13 @@ public record WireConnectionSyncPacket(Set<WireConnectionData> connections) impl
         return new BlockPos(buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
     }
 
-    public record WireConnectionData(BlockPos startPos, int startIndex, BlockPos endPos, int endIndex, WireType wireType) {}
+    public record WireConnectionData(
+            BlockPos startPos,
+            int startIndex,
+            Phase startPhase,
+            BlockPos endPos,
+            int endIndex,
+            Phase endPhase,
+            WireType wireType
+    ) {}
 }

@@ -1,5 +1,6 @@
 package com.voltcraft.electric.wire;
 
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.WireType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -29,13 +30,19 @@ public final class WireNetworkSavedData extends SavedData {
             WireType wireType = WireType.byName(entry.getString("wireType"));
             if (wireType == null) continue;
 
+            Phase startPhase = Phase.byName(entry.getString("startPhase"));
+            Phase endPhase = Phase.byName(entry.getString("endPhase"));
+            int startIndex = entry.getInt("startIndex");
+            int endIndex = entry.getInt("endIndex");
             WireEndpoint start = new WireEndpoint(
                     new BlockPos(entry.getInt("startX"), entry.getInt("startY"), entry.getInt("startZ")),
-                    entry.getInt("startIndex")
+                    startIndex,
+                    startPhase != null ? startPhase : WireEndpoint.phaseFromIndex(startIndex)
             );
             WireEndpoint end = new WireEndpoint(
                     new BlockPos(entry.getInt("endX"), entry.getInt("endY"), entry.getInt("endZ")),
-                    entry.getInt("endIndex")
+                    endIndex,
+                    endPhase != null ? endPhase : WireEndpoint.phaseFromIndex(endIndex)
             );
             data.connections.add(new WireConnection(start, end, wireType));
         }
@@ -54,10 +61,12 @@ public final class WireNetworkSavedData extends SavedData {
             entry.putInt("startY", start.pos().getY());
             entry.putInt("startZ", start.pos().getZ());
             entry.putInt("startIndex", start.endpointIndex());
+            entry.putString("startPhase", start.phase().getSerializedName());
             entry.putInt("endX", end.pos().getX());
             entry.putInt("endY", end.pos().getY());
             entry.putInt("endZ", end.pos().getZ());
             entry.putInt("endIndex", end.endpointIndex());
+            entry.putString("endPhase", end.phase().getSerializedName());
             entries.add(entry);
         }
         tag.put("connections", entries);

@@ -1,5 +1,6 @@
 package com.voltcraft.item;
 
+import com.voltcraft.electric.Phase;
 import com.voltcraft.electric.WireType;
 import com.voltcraft.electric.wire.WireConnection;
 import com.voltcraft.electric.wire.WireEndpoint;
@@ -97,7 +98,8 @@ public class WireCoilItem extends Item {
         BlockHitResult blockHit = (BlockHitResult) hitResult;
         Direction side = blockHit.getDirection();
         BlockPos endpointPos = blockHit.getBlockPos().relative(side);
-        return new WireEndpoint(endpointPos, endpointIndex(side, blockHit));
+        int index = endpointIndex(side, blockHit);
+        return new WireEndpoint(endpointPos, index, phaseFromEndpointIndex(index));
     }
 
     private int endpointIndex(Direction side, BlockHitResult hit) {
@@ -115,5 +117,14 @@ public class WireCoilItem extends Item {
         int right = horizontal >= 0.5 ? 1 : 0;
         int top = vertical >= 0.5 ? 2 : 0;
         return top + right;
+    }
+
+    private Phase phaseFromEndpointIndex(int endpointIndex) {
+        return switch (endpointIndex) {
+            case 0 -> Phase.LIVE;
+            case 1 -> Phase.NEUTRAL;
+            case 2 -> Phase.EARTH;
+            default -> Phase.LIVE;
+        };
     }
 }

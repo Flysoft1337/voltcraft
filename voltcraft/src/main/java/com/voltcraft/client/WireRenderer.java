@@ -60,7 +60,7 @@ public class WireRenderer {
         Vec3 start = endpointPosition(data.startPos(), data.startIndex());
         Vec3 end = endpointPosition(data.endPos(), data.endIndex());
 
-        int color = getWireColor(data.wireType());
+        int color = getWireColor(data.wireType(), data.startPhase());
         int r = (color >> 16) & 0xFF;
         int g = (color >> 8) & 0xFF;
         int b = color & 0xFF;
@@ -114,11 +114,17 @@ public class WireRenderer {
         return points;
     }
 
-    private static int getWireColor(WireType wireType) {
+    private static int getWireColor(WireType wireType, com.voltcraft.electric.Phase phase) {
+        if (phase == com.voltcraft.electric.Phase.NEUTRAL) {
+            return 0xD8D8D8;
+        }
+        if (phase == com.voltcraft.electric.Phase.EARTH) {
+            return 0x4CAF50;
+        }
         return switch (wireType) {
-            case COPPER -> 0xB87333;  // 铜色
-            case TIN -> 0x808080;     // 锡色
-            case SILVER -> 0xC0C0C0;  // 银色
+            case COPPER -> 0xB87333;
+            case TIN -> 0x808080;
+            case SILVER -> 0xC0C0C0;
         };
     }
 }
