@@ -33,6 +33,11 @@ public final class ModDataComponents {
                     .persistent(BlockPos.CODEC)
                     .networkSynchronized(BlockPos.STREAM_CODEC));
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> WIRE_START_INDEX =
+            COMPONENTS.registerComponentType("wire_start_index", builder -> builder
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT));
+
     private ModDataComponents() {}
 
     public static void register(IEventBus modEventBus) {

@@ -57,8 +57,8 @@ public class WireRenderer {
     }
 
     private static void renderWire(PoseStack poseStack, VertexConsumer consumer, WireConnectionData data) {
-        Vec3 start = Vec3.atCenterOf(data.startPos());
-        Vec3 end = Vec3.atCenterOf(data.endPos());
+        Vec3 start = endpointPosition(data.startPos(), data.startIndex());
+        Vec3 end = endpointPosition(data.endPos(), data.endIndex());
 
         int color = getWireColor(data.wireType());
         int r = (color >> 16) & 0xFF;
@@ -81,6 +81,13 @@ public class WireRenderer {
                     .setColor(r, g, b, a)
                     .setNormal(0, 1, 0);
         }
+    }
+
+    private static Vec3 endpointPosition(net.minecraft.core.BlockPos pos, int endpointIndex) {
+        double x = pos.getX() + ((endpointIndex & 1) == 0 ? 0.35 : 0.65);
+        double y = pos.getY() + ((endpointIndex & 2) == 0 ? 0.35 : 0.65);
+        double z = pos.getZ() + 0.5;
+        return new Vec3(x, y, z);
     }
 
     private static Vec3[] calculateCatenary(Vec3 start, Vec3 end, double sag, int segments) {

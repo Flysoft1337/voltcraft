@@ -6,6 +6,7 @@ import com.voltcraft.electric.wire.WireEndpoint;
 import com.voltcraft.electric.wire.WireNetworkManager;
 import com.voltcraft.registry.ModDataComponents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -42,38 +43,32 @@ public class WireCoilItem extends Item {
             return InteractionResultHolder.pass(stack);
         }
 
-        // 获取玩家看向的方块位置
-        BlockPos targetPos = getTargetBlockPos(player);
-        if (targetPos == null) {
+        WireEndpoint target = getTargetEndpoint(player);
+        if (target == null) {
             return InteractionResultHolder.pass(stack);
         }
 
-        // 检查是否已有起始位置
         BlockPos startPos = stack.get(ModDataComponents.WIRE_START_POS.get());
+        Integer startIndex = stack.get(ModDataComponents.WIRE_START_INDEX.get());
 
-        if (startPos != null) {
-            // 第二次右键：尝试建立连接
-            WireEndpoint start = new WireEndpoint(startPos, 0);
-            WireEndpoint end = new WireEndpoint(targetPos, 0);
-
+        if (startPos != null && startIndex != null) {
+            WireEndpoint start = new WireEndpoint(startPos, startIndex);
             WireNetworkManager manager = WireNetworkManager.get(level);
-            WireConnection connection = manager.addConnection(level, start, end, wireType);
+            WireConnection connection = manager.addConnection(level, start, target, wireType);
 
-            // 清除起始位置
             stack.remove(ModDataComponents.WIRE_START_POS.get());
+            stack.remove(ModDataComponents.WIRE_START_INDEX.get());
 
             if (connection != null) {
-                // 连接成功
                 if (!player.getAbilities().instabuild) {
                     stack.shrink(1);
                 }
                 player.displayClientMessage(
                         Component.translatable("voltcraft.wire.connected",
-                                startPos.toShortString(), targetPos.toShortString()),
+                                startPos.toShortString(), target.pos().toShortString()),
                         true
                 );
             } else {
-                // 连接失败（距离超限或已存在）
                 player.displayClientMessage(
                         Component.translatable("voltcraft.wire.failed"),
                         true
@@ -83,10 +78,10 @@ public class WireCoilItem extends Item {
             return InteractionResultHolder.success(stack);
         }
 
-        // 第一次右键：记录起始位置
-        stack.set(ModDataComponents.WIRE_START_POS.get(), targetPos);
+        stack.set(ModDataComponents.WIRE_START_POS.get(), target.pos());
+        stack.set(ModDataComponents.WIRE_START_INDEX.get(), target.endpointIndex());
         player.displayClientMessage(
-                Component.translatable("voltcraft.wire.start_set", targetPos.toShortString()),
+                Component.translatable("voltcraft.wire.start_set", target.pos().toShortString()),
                 true
         );
 
@@ -94,13 +89,31 @@ public class WireCoilItem extends Item {
     }
 
     @Nullable
-    private BlockPos getTargetBlockPos(Player player) {
-        // 使用射线追踪获取玩家看向的方块位置，最大距离 6 格
+    private WireEndpoint getTargetEndpoint(Player player) {
         HitResult hitResult = player.pick(6.0, 0.0f, false);
-        if (hitResult.getType() == HitResult.Type.BLOCK) {
-            BlockHitResult blockHit = (BlockHitResult) hitResult;
-            return blockHit.getBlockPos();
+        if (hitResult.getType() != HitResult.Type.BLOCK) {
+            return null;
         }
-        return null;
+        BlockHitResult blockHit = (BlockHitResult) hitResult;
+        Direction side = blockHit.getDirection();
+        BlockPos endpointPos = blockHit.getBlockPos().relative(side);
+        return new WireEndpoint(endpointPos, endpointIndex(side, blockHit));
+    }
+
+    private int endpointIndex(Direction side, BlockHitResult hit) {
+        double x = hit.getLocation().x - hit.getBlockPos().getX();
+        double y = hit.getLocation().y - hit.getBlockPos().getY();
+        double z = hit.getLocation().z - hit.getBlockPos().getZ();
+        return switch (side) {
+            case NORTH, SOUTH -> quadrant(x, y);
+            case EAST, WEST -> quadrant(z, y);
+            case UP, DOWN -> quadrant(x, z);
+        };
+    }
+
+    private int quadrant(double horizontal, double vertical) {
+        int right = horizontal >= 0.5 ? 1 : 0;
+        int top = vertical >= 0.5 ? 2 : 0;
+        return top + right;
     }
 }
