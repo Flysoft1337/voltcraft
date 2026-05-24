@@ -84,10 +84,10 @@ public class TransformerBlockEntity extends BlockEntity implements IWireConnecta
         WireNetworkManager manager = WireNetworkManager.get(level);
         WireNetwork liveNet = manager.networkAt(outputPos, Phase.LIVE);
         WireNetwork neutralNet = manager.networkAt(outputPos, Phase.NEUTRAL);
-        if (liveNet == null) return;
+        if (liveNet == null || neutralNet == null) return;
 
         if (!ensureVoltage(liveNet)) return;
-        if (neutralNet != null && !ensureVoltage(neutralNet)) return;
+        if (!ensureVoltage(neutralNet)) return;
 
         int available = inputBuffer.getEnergyStored();
         if (available <= 0) return;
@@ -95,15 +95,10 @@ public class TransformerBlockEntity extends BlockEntity implements IWireConnecta
         long afterLoss = (long) (available * (1.0 - LOSS_RATE));
         if (afterLoss <= 0) return;
 
-        long pushed;
-        if (neutralNet != null) {
-            long half = afterLoss / 2;
-            long livePushed = liveNet.pushEnergy(half, false);
-            long neutralPushed = neutralNet.pushEnergy(afterLoss - half, false);
-            pushed = livePushed + neutralPushed;
-        } else {
-            pushed = liveNet.pushEnergy(afterLoss, false);
-        }
+        long half = afterLoss / 2;
+        long livePushed = liveNet.pushEnergy(half, false);
+        long neutralPushed = neutralNet.pushEnergy(afterLoss - half, false);
+        long pushed = livePushed + neutralPushed;
         if (pushed <= 0) return;
 
         int consumed = (int) Math.min(Integer.MAX_VALUE, Math.ceil(pushed / (1.0 - LOSS_RATE)));

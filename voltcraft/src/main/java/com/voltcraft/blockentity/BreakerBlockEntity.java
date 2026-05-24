@@ -105,7 +105,7 @@ public class BreakerBlockEntity extends BlockEntity implements IWireConnectable 
 
         WireNetwork liveOut = manager.networkAt(outPos, Phase.LIVE);
         WireNetwork neutralOut = manager.networkAt(outPos, Phase.NEUTRAL);
-        if (liveOut == null) {
+        if (liveOut == null || neutralOut == null) {
             lastFlow = 0;
             return;
         }
@@ -117,13 +117,8 @@ public class BreakerBlockEntity extends BlockEntity implements IWireConnectable 
             return;
         }
 
-        long pushed;
-        if (neutralOut != null) {
-            long half = available / 2L;
-            pushed = liveOut.pushEnergy(half, false) + neutralOut.pushEnergy(available - half, false);
-        } else {
-            pushed = liveOut.pushEnergy(available, false);
-        }
+        long half = available / 2L;
+        long pushed = liveOut.pushEnergy(half, false) + neutralOut.pushEnergy(available - half, false);
         if (pushed > 0) {
             buffer.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
         }

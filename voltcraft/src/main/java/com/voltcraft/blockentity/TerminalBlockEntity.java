@@ -98,7 +98,7 @@ public class TerminalBlockEntity extends BlockEntity implements IWireConnectable
             return;
         }
 
-        if (liveNet == null) {
+        if (liveNet == null || neutralNet == null) {
             lastFlow = 0;
             return;
         }
@@ -108,13 +108,8 @@ public class TerminalBlockEntity extends BlockEntity implements IWireConnectable
             return;
         }
 
-        long pushed;
-        if (neutralNet != null) {
-            long half = available / 2L;
-            pushed = liveNet.pushEnergy(half, false) + neutralNet.pushEnergy(available - half, false);
-        } else {
-            pushed = liveNet.pushEnergy(available, false);
-        }
+        long half = available / 2L;
+        long pushed = liveNet.pushEnergy(half, false) + neutralNet.pushEnergy(available - half, false);
         if (pushed > 0) {
             buffer.extractEnergy((int) Math.min(Integer.MAX_VALUE, pushed), false);
         }
