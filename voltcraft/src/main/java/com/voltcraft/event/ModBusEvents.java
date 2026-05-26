@@ -2,8 +2,12 @@ package com.voltcraft.event;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.ElectrolyzerBlock;
+import com.voltcraft.block.PlatePressBlock;
+import com.voltcraft.block.RollingMillBlock;
 import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.blockentity.ElectrolyzerBlockEntity;
+import com.voltcraft.blockentity.PlatePressBlockEntity;
+import com.voltcraft.blockentity.RollingMillBlockEntity;
 import com.voltcraft.blockentity.TerminalBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.registry.ModBlockEntities;
@@ -76,6 +80,62 @@ public final class ModBusEvents {
                         return be.getItemHandler(); // 左侧输入
                     } else if (side == right) {
                         return be.getItemHandler(); // 右侧输出（需要区分）
+                    }
+                    return null;
+                }
+        );
+
+        // 轧机：背面输入能量，左侧输入物品，右侧输出物品
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ROLLING_MILL.get(),
+                (RollingMillBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getEnergyStorage();
+                    Direction facing = be.getBlockState().getValue(RollingMillBlock.FACING);
+                    return side == facing.getOpposite() ? be.getEnergyStorage() : null;
+                }
+        );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.ROLLING_MILL.get(),
+                (RollingMillBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getItemHandler();
+                    Direction facing = be.getBlockState().getValue(RollingMillBlock.FACING);
+                    Direction left = facing.getCounterClockWise();
+                    Direction right = facing.getClockWise();
+                    if (side == left) {
+                        return be.getItemHandler(left);
+                    } else if (side == right) {
+                        return be.getItemHandler(right);
+                    }
+                    return null;
+                }
+        );
+
+        // 制板机：背面输入能量，左侧输入物品，右侧输出物品
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.PLATE_PRESS.get(),
+                (PlatePressBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getEnergyStorage();
+                    Direction facing = be.getBlockState().getValue(PlatePressBlock.FACING);
+                    return side == facing.getOpposite() ? be.getEnergyStorage() : null;
+                }
+        );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.PLATE_PRESS.get(),
+                (PlatePressBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getItemHandler();
+                    Direction facing = be.getBlockState().getValue(PlatePressBlock.FACING);
+                    Direction left = facing.getCounterClockWise();
+                    Direction right = facing.getClockWise();
+                    if (side == left) {
+                        return be.getItemHandler(left);
+                    } else if (side == right) {
+                        return be.getItemHandler(right);
                     }
                     return null;
                 }

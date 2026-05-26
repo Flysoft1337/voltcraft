@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "voltcraft:block/rolling_mill_top",
+    "front": "voltcraft:block/rolling_mill_front",
+    "side": "voltcraft:block/rolling_mill_side",
+    "particle": "voltcraft:block/rolling_mill_side"
+  }
+}

@@ -3,6 +3,8 @@ package com.voltcraft.registry;
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.BreakerBlock;
 import com.voltcraft.block.ElectrolyzerBlock;
+import com.voltcraft.block.PlatePressBlock;
+import com.voltcraft.block.RollingMillBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.electric.CableTier;
@@ -180,6 +182,28 @@ public final class ModBlocks {
     public static final DeferredBlock<ElectrolyzerBlock> ELECTROLYZER = registerWithItem(
             "electrolyzer",
             () -> new ElectrolyzerBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .destroyTime(3.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops())
+    );
+
+    // Rolling Mill block
+    public static final DeferredBlock<RollingMillBlock> ROLLING_MILL = registerWithItem(
+            "rolling_mill",
+            () -> new RollingMillBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .destroyTime(3.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops())
+    );
+
+    // Plate Press block
+    public static final DeferredBlock<PlatePressBlock> PLATE_PRESS = registerWithItem(
+            "plate_press",
+            () -> new PlatePressBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
                     .destroyTime(3.5f)
                     .explosionResistance(6.0f)

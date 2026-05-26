@@ -30,6 +30,8 @@ public final class ModCreativeTabs {
                             output.accept(ModBlocks.TERMINALS.get(tier).get());
                         }
                         output.accept(ModBlocks.ELECTROLYZER.get());
+                        output.accept(ModBlocks.ROLLING_MILL.get());
+                        output.accept(ModBlocks.PLATE_PRESS.get());
                     })
                     .build());
 
@@ -90,6 +92,14 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.COPPER_WIRE_COIL.get());
                         output.accept(ModItems.TIN_WIRE_COIL.get());
                         output.accept(ModItems.SILVER_WIRE_COIL.get());
+                        output.accept(ModItems.COPPER_WIRE.get());
+                        output.accept(ModItems.TIN_WIRE.get());
+                        output.accept(ModItems.SILVER_WIRE.get());
+                        output.accept(ModItems.IRON_WIRE.get());
+                        output.accept(ModItems.ZINC_WIRE.get());
+                        output.accept(ModItems.LEAD_WIRE.get());
+                        output.accept(ModItems.NICKEL_WIRE.get());
+                        output.accept(ModItems.MANGANESE_WIRE.get());
                     })
                     .build());
 
@@ -109,6 +119,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.LEAD_PLATE.get());
                         output.accept(ModItems.SILVER_PLATE.get());
                         output.accept(ModItems.TIN_PLATE.get());
+                        output.accept(ModItems.COPPER_PLATE.get());
                     })
                     .build());
 

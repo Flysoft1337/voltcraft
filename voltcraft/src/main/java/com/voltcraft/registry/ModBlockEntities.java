@@ -7,6 +7,8 @@ import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import com.voltcraft.blockentity.BreakerBlockEntity;
 import com.voltcraft.blockentity.ElectrolyzerBlockEntity;
+import com.voltcraft.blockentity.PlatePressBlockEntity;
+import com.voltcraft.blockentity.RollingMillBlockEntity;
 import com.voltcraft.blockentity.TerminalBlockEntity;
 import com.voltcraft.blockentity.TransformerBlockEntity;
 import com.voltcraft.electric.CableTier;
@@ -74,6 +76,22 @@ public final class ModBlockEntities {
                     BlockEntityType.Builder.of(
                             ElectrolyzerBlockEntity::new,
                             ModBlocks.ELECTROLYZER.get()
+                    ).build(null)
+            );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RollingMillBlockEntity>> ROLLING_MILL =
+            BLOCK_ENTITIES.register("rolling_mill", () ->
+                    BlockEntityType.Builder.of(
+                            RollingMillBlockEntity::new,
+                            ModBlocks.ROLLING_MILL.get()
+                    ).build(null)
+            );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlatePressBlockEntity>> PLATE_PRESS =
+            BLOCK_ENTITIES.register("plate_press", () ->
+                    BlockEntityType.Builder.of(
+                            PlatePressBlockEntity::new,
+                            ModBlocks.PLATE_PRESS.get()
                     ).build(null)
             );
 

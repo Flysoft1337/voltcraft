@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "voltcraft:block/plate_press_top",
+    "front": "voltcraft:block/plate_press_front",
+    "side": "voltcraft:block/plate_press_side",
+    "particle": "voltcraft:block/plate_press_side"
+  }
+}
