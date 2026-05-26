@@ -211,6 +211,53 @@ public final class ModItems {
             () -> new Item(new Item.Properties())
     );
 
+    // Copper plate (vanilla copper ingot → copper plate)
+    public static final DeferredItem<Item> COPPER_PLATE = ITEMS.register(
+            "copper_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Wire items (produced by rolling mill from plates)
+    public static final DeferredItem<Item> COPPER_WIRE = ITEMS.register(
+            "copper_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> TIN_WIRE = ITEMS.register(
+            "tin_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> SILVER_WIRE = ITEMS.register(
+            "silver_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRON_WIRE = ITEMS.register(
+            "iron_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> ZINC_WIRE = ITEMS.register(
+            "zinc_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> LEAD_WIRE = ITEMS.register(
+            "lead_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> NICKEL_WIRE = ITEMS.register(
+            "nickel_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> MANGANESE_WIRE = ITEMS.register(
+            "manganese_wire",
+            () -> new Item(new Item.Properties())
+    );
+
     // Wire coil items
     public static final DeferredItem<WireCoilItem> COPPER_WIRE_COIL = ITEMS.register(
             "copper_wire_coil",

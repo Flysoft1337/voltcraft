@@ -2,6 +2,8 @@ package com.voltcraft.registry;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.menu.ElectrolyzerMenu;
+import com.voltcraft.menu.PlatePressMenu;
+import com.voltcraft.menu.RollingMillMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -21,6 +23,12 @@ public final class ModMenuTypes {
 
     public static final DeferredHolder<MenuType<?>, MenuType<ElectrolyzerMenu>> ELECTROLYZER =
             registerMenuType("electrolyzer", ElectrolyzerMenu::new);
+
+    public static final DeferredHolder<MenuType<?>, MenuType<RollingMillMenu>> ROLLING_MILL =
+            registerMenuType("rolling_mill", RollingMillMenu::new);
+
+    public static final DeferredHolder<MenuType<?>, MenuType<PlatePressMenu>> PLATE_PRESS =
+            registerMenuType("plate_press", PlatePressMenu::new);
 
     private static <T extends AbstractContainerMenu> DeferredHolder<MenuType<?>, MenuType<T>> registerMenuType(
             String name, IContainerFactory<T> factory) {

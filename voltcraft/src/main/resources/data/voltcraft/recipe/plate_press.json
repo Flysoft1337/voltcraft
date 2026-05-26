@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SFS",
+    "IPI",
+    "IBI"
+  ],
+  "key": {
+    "S": {
+      "item": "voltcraft:screw"
+    },
+    "F": {
+      "item": "voltcraft:fuse"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "P": {
+      "item": "minecraft:iron_block"
+    },
+    "B": {
+      "item": "voltcraft:zinc_manganese_battery"
+    }
+  },
+  "result": {
+    "id": "voltcraft:plate_press",
+    "count": 1
+  }
+}
