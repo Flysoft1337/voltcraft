@@ -34,6 +34,10 @@
   "item.voltcraft.flask": "Flask",
   "item.voltcraft.screw": "Screw",
   "item.voltcraft.brine_bucket": "Brine Bucket",
+  "item.voltcraft.gear": "Gear",
+  "item.voltcraft.electric_motor": "Electric Motor",
+  "item.voltcraft.circuit_board": "Circuit Board",
+  "item.voltcraft.pump": "Pump",
   "itemGroup.voltcraft.tools": "VoltCraft - Tools",
   "item.voltcraft.hammer": "Hammer",
   "item.voltcraft.wrench": "Wrench",
@@ -121,5 +125,16 @@
   "voltcraft.jade.transformer_output": "Output: %s",
   "voltcraft.jade.buffer": "Buffer: %s / %s FE",
   "voltcraft.jade.breaker_state": "State: %s",
-  "voltcraft.jade.wiring": "Wiring: %s"
+  "voltcraft.jade.wiring": "Wiring: %s",
+  "voltcraft.jade.progress": "Progress: %s%%",
+
+  "gui.voltcraft.jei.category.plate_press": "Plate Press",
+  "gui.voltcraft.jei.category.rolling_mill": "Rolling Mill",
+  "gui.voltcraft.jei.category.electrolyzer": "Electrolyzer",
+  "gui.voltcraft.jei.energy": "Energy: %s FE",
+  "gui.voltcraft.jei.processing_time": "Processing Time: %s ticks",
+
+  "emi.category.voltcraft.plate_press": "Plate Press",
+  "emi.category.voltcraft.rolling_mill": "Rolling Mill",
+  "emi.category.voltcraft.electrolyzer": "Electrolyzer"
 }

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WIW",
+    "ISI",
+    "WIW"
+  ],
+  "key": {
+    "W": {
+      "item": "voltcraft:copper_wire"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "voltcraft:spring"
+    }
+  },
+  "result": {
+    "id": "voltcraft:electric_motor",
+    "count": 1
+  }
+}

@@ -34,6 +34,10 @@
   "item.voltcraft.flask": "烧瓶",
   "item.voltcraft.screw": "螺丝",
   "item.voltcraft.brine_bucket": "盐水桶",
+  "item.voltcraft.gear": "齿轮",
+  "item.voltcraft.electric_motor": "电动马达",
+  "item.voltcraft.circuit_board": "电路板",
+  "item.voltcraft.pump": "泵",
   "itemGroup.voltcraft.tools": "伏特工艺 - 工具",
   "item.voltcraft.hammer": "锤子",
   "item.voltcraft.wrench": "扳手",
@@ -121,5 +125,16 @@
   "voltcraft.jade.transformer_output": "输出：%s",
   "voltcraft.jade.buffer": "缓存：%s / %s FE",
   "voltcraft.jade.breaker_state": "状态：%s",
-  "voltcraft.jade.wiring": "接线：%s"
+  "voltcraft.jade.wiring": "接线：%s",
+  "voltcraft.jade.progress": "进度：%s%%",
+
+  "gui.voltcraft.jei.category.plate_press": "制板机",
+  "gui.voltcraft.jei.category.rolling_mill": "轧机",
+  "gui.voltcraft.jei.category.electrolyzer": "电解槽",
+  "gui.voltcraft.jei.energy": "能量：%s FE",
+  "gui.voltcraft.jei.processing_time": "处理时间：%s tick",
+
+  "emi.category.voltcraft.plate_press": "制板机",
+  "emi.category.voltcraft.rolling_mill": "轧机",
+  "emi.category.voltcraft.electrolyzer": "电解槽"
 }

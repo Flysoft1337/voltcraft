@@ -137,6 +137,31 @@ public final class ModItems {
             () -> new BrineBucketItem(new Item.Properties())
     );
 
+    // Parts - mechanical components
+    /** 齿轮 — 机械传动部件 */
+    public static final DeferredItem<Item> GEAR = ITEMS.register(
+            "gear",
+            () -> new Item(new Item.Properties())
+    );
+
+    /** 电动马达 — 机器动力来源 */
+    public static final DeferredItem<Item> ELECTRIC_MOTOR = ITEMS.register(
+            "electric_motor",
+            () -> new Item(new Item.Properties())
+    );
+
+    /** 电路板 — 电子控制核心 */
+    public static final DeferredItem<Item> CIRCUIT_BOARD = ITEMS.register(
+            "circuit_board",
+            () -> new Item(new Item.Properties())
+    );
+
+    /** 泵 — 流体机器组件 */
+    public static final DeferredItem<Item> PUMP = ITEMS.register(
+            "pump",
+            () -> new Item(new Item.Properties())
+    );
+
     // Tools
     public static final DeferredItem<ToolItem> HAMMER = ITEMS.register(
             "hammer",

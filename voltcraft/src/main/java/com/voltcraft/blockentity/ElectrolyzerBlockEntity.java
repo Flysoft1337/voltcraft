@@ -63,6 +63,9 @@ public class ElectrolyzerBlockEntity extends BlockEntity implements MenuProvider
             0                          // 不能输出
     );
 
+    private final IItemHandler inputHandler = new InputOnlyHandler();
+    private final IItemHandler outputHandler = new OutputOnlyHandler();
+
     // 处理进度数据，用于 UI 同步
     protected final ContainerData data = new ContainerData() {
         @Override
@@ -137,9 +140,9 @@ public class ElectrolyzerBlockEntity extends BlockEntity implements MenuProvider
         Direction right = facing.getClockWise();
 
         if (side == left) {
-            return new InputOnlyHandler(); // 左侧只能输入
+            return inputHandler; // 左侧只能输入
         } else if (side == right) {
-            return new OutputOnlyHandler(); // 右侧只能输出
+            return outputHandler; // 右侧只能输出
         }
         return null; // 其他面不能交互物品
     }
@@ -156,9 +159,25 @@ public class ElectrolyzerBlockEntity extends BlockEntity implements MenuProvider
     /**
      * 获取当前处理进度（0-1）
      */
-    public float getProgress() {
+    public float getProgressPercent() {
         if (maxProgress == 0) return 0;
         return (float) progress / maxProgress;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public int getMaxProgress() {
+        return maxProgress;
+    }
+
+    public int getEnergyStored() {
+        return energyStorage.getEnergyStored();
+    }
+
+    public int getMaxEnergyStored() {
+        return energyStorage.getMaxEnergyStored();
     }
 
     public int getProgressScaled(int pixels) {
@@ -215,8 +234,6 @@ public class ElectrolyzerBlockEntity extends BlockEntity implements MenuProvider
      * 处理物品
      */
     private void processItem() {
-        if (!canProcess()) return;
-
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         ItemStack output = getOutputItem(input);
 

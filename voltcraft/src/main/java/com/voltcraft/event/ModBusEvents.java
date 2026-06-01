@@ -77,9 +77,65 @@ public final class ModBusEvents {
                     Direction left = facing.getCounterClockWise();
                     Direction right = facing.getClockWise();
                     if (side == left) {
-                        return be.getItemHandler(); // 左侧输入
+                        return be.getItemHandler(left); // 左侧输入
                     } else if (side == right) {
-                        return be.getItemHandler(); // 右侧输出（需要区分）
+                        return be.getItemHandler(right); // 右侧输出
+                    }
+                    return null;
+                }
+        );
+
+        // 轧机：背面输入能量，左侧输入物品，右侧输出物品
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ROLLING_MILL.get(),
+                (RollingMillBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getEnergyStorage();
+                    Direction facing = be.getBlockState().getValue(RollingMillBlock.FACING);
+                    return side == facing.getOpposite() ? be.getEnergyStorage() : null;
+                }
+        );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.ROLLING_MILL.get(),
+                (RollingMillBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getItemHandler();
+                    Direction facing = be.getBlockState().getValue(RollingMillBlock.FACING);
+                    Direction left = facing.getCounterClockWise();
+                    Direction right = facing.getClockWise();
+                    if (side == left) {
+                        return be.getItemHandler(left);
+                    } else if (side == right) {
+                        return be.getItemHandler(right);
+                    }
+                    return null;
+                }
+        );
+
+        // 制板机：背面输入能量，左侧输入物品，右侧输出物品
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.PLATE_PRESS.get(),
+                (PlatePressBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getEnergyStorage();
+                    Direction facing = be.getBlockState().getValue(PlatePressBlock.FACING);
+                    return side == facing.getOpposite() ? be.getEnergyStorage() : null;
+                }
+        );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.PLATE_PRESS.get(),
+                (PlatePressBlockEntity be, Direction side) -> {
+                    if (side == null) return be.getItemHandler();
+                    Direction facing = be.getBlockState().getValue(PlatePressBlock.FACING);
+                    Direction left = facing.getCounterClockWise();
+                    Direction right = facing.getClockWise();
+                    if (side == left) {
+                        return be.getItemHandler(left);
+                    } else if (side == right) {
+                        return be.getItemHandler(right);
                     }
                     return null;
                 }

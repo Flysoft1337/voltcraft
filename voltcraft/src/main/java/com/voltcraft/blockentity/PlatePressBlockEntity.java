@@ -77,6 +77,9 @@ public class PlatePressBlockEntity extends BlockEntity implements MenuProvider {
             0
     );
 
+    private final IItemHandler inputHandler = new InputOnlyHandler();
+    private final IItemHandler outputHandler = new OutputOnlyHandler();
+
     protected final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -141,15 +144,31 @@ public class PlatePressBlockEntity extends BlockEntity implements MenuProvider {
         Direction right = facing.getClockWise();
 
         if (side == left) {
-            return new InputOnlyHandler();
+            return inputHandler;
         } else if (side == right) {
-            return new OutputOnlyHandler();
+            return outputHandler;
         }
         return null;
     }
 
     public static boolean isInputItem(ItemStack stack) {
         return INGOT_TO_PLATE.containsKey(stack.getItem());
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public int getMaxProgress() {
+        return maxProgress;
+    }
+
+    public int getEnergyStored() {
+        return energyStorage.getEnergyStored();
+    }
+
+    public int getMaxEnergyStored() {
+        return energyStorage.getMaxEnergyStored();
     }
 
     public void serverTick() {
@@ -187,8 +206,6 @@ public class PlatePressBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void processItem() {
-        if (!canProcess()) return;
-
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         ItemStack output = getOutputItem(input);
 
