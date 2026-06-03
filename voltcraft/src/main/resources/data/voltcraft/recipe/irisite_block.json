@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "III",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "voltcraft:irisite_ingot"
+    }
+  },
+  "result": {
+    "item": "voltcraft:irisite_block",
+    "count": 1
+  }
+}

@@ -9,7 +9,8 @@ import net.minecraft.util.StringRepresentable;
 public enum WireType implements StringRepresentable {
     COPPER("copper", CableTier.LOW, 16),      // 低压，16格
     TIN("tin", CableTier.MEDIUM, 24),          // 中压，24格
-    SILVER("silver", CableTier.HIGH, 32);      // 高压，32格
+    SILVER("silver", CableTier.HIGH, 32),      // 高压，32格
+    IRISITE("irisite", CableTier.SUPERCONDUCTOR, 64); // 超导体，64格
 
     private final String name;
     private final CableTier tier;

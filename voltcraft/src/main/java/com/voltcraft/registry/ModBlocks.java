@@ -178,6 +178,38 @@ public final class ModBlocks {
                     .requiresCorrectToolForDrops())
     );
 
+    // Irisite ore blocks (superconductor ore)
+    public static final DeferredBlock<Block> IRISITE_ORE = registerWithItem(
+            "irisite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .destroyTime(3.0f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    public static final DeferredBlock<Block> DEEPSLATE_IRISITE_ORE = registerWithItem(
+            "deepslate_irisite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DEEPSLATE)
+                    .destroyTime(4.5f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops())
+    );
+
+    // Irisite block (metal block)
+    public static final DeferredBlock<Block> IRISITE_BLOCK = registerWithItem(
+            "irisite_block",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .destroyTime(5.0f)
+                    .explosionResistance(6.0f)
+                    .sound(SoundType.METAL)
+                    .requiresCorrectToolForDrops())
+    );
+
     // Electrolyzer block
     public static final DeferredBlock<ElectrolyzerBlock> ELECTROLYZER = registerWithItem(
             "electrolyzer",

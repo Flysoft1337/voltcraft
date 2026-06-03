@@ -5,7 +5,6 @@ import com.voltcraft.registry.ModBlocks;
 import com.voltcraft.registry.ModItems;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
@@ -70,6 +69,7 @@ public class PlatePressRecipeCategory implements IRecipeCategory<PlatePressRecip
         recipes.add(new Recipe(new ItemStack(ModItems.LEAD_INGOT.get()), new ItemStack(ModItems.LEAD_PLATE.get())));
         recipes.add(new Recipe(new ItemStack(ModItems.SILVER_INGOT.get()), new ItemStack(ModItems.SILVER_PLATE.get())));
         recipes.add(new Recipe(new ItemStack(ModItems.TIN_INGOT.get()), new ItemStack(ModItems.TIN_PLATE.get())));
+        recipes.add(new Recipe(new ItemStack(ModItems.IRISITE_INGOT.get()), new ItemStack(ModItems.IRISITE_PLATE.get())));
         return recipes;
     }
 

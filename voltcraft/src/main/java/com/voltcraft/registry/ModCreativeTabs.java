@@ -71,6 +71,11 @@ public final class ModCreativeTabs {
                         output.accept(ModBlocks.DEEPSLATE_CASSITERITE_ORE.get());
                         output.accept(ModItems.RAW_CASSITERITE.get());
                         output.accept(ModItems.TIN_INGOT.get());
+                        output.accept(ModBlocks.IRISITE_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_IRISITE_ORE.get());
+                        output.accept(ModItems.RAW_IRISITE.get());
+                        output.accept(ModItems.IRISITE_INGOT.get());
+                        output.accept(ModBlocks.IRISITE_BLOCK.get());
                     })
                     .build());
 
@@ -92,9 +97,11 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.COPPER_WIRE_COIL.get());
                         output.accept(ModItems.TIN_WIRE_COIL.get());
                         output.accept(ModItems.SILVER_WIRE_COIL.get());
+                        output.accept(ModItems.IRISITE_WIRE_COIL.get());
                         output.accept(ModItems.COPPER_WIRE.get());
                         output.accept(ModItems.TIN_WIRE.get());
                         output.accept(ModItems.SILVER_WIRE.get());
+                        output.accept(ModItems.IRISITE_WIRE.get());
                         output.accept(ModItems.IRON_WIRE.get());
                         output.accept(ModItems.ZINC_WIRE.get());
                         output.accept(ModItems.LEAD_WIRE.get());
@@ -120,6 +127,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.SILVER_PLATE.get());
                         output.accept(ModItems.TIN_PLATE.get());
                         output.accept(ModItems.COPPER_PLATE.get());
+                        output.accept(ModItems.IRISITE_PLATE.get());
                     })
                     .build());
 

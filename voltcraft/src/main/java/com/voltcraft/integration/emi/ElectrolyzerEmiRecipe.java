@@ -64,8 +64,8 @@ public class ElectrolyzerEmiRecipe implements EmiRecipe {
 
     public static List<EmiRecipe> getRecipes() {
         List<EmiRecipe> recipes = new ArrayList<>();
-        // TODO: 添加电解槽配方（待配方系统实现）
-        // 示例：recipes.add(new ElectrolyzerEmiRecipe(EmiStack.of(ModItems.BRINE_BUCKET.get()), EmiStack.of(ModItems.SODIUM_INGOT.get())));
+        recipes.add(new ElectrolyzerEmiRecipe(EmiStack.of(net.minecraft.world.item.Items.WATER_BUCKET), EmiStack.of(ModItems.LITHIUM_INGOT.get(), 1)));
+        recipes.add(new ElectrolyzerEmiRecipe(EmiStack.of(ModItems.BRINE_BUCKET.get()), EmiStack.of(ModItems.SODIUM_INGOT.get(), 2)));
         return recipes;
     }
 }

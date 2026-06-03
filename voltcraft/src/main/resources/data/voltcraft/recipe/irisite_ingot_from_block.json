@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "voltcraft:irisite_block"
+    }
+  ],
+  "result": {
+    "item": "voltcraft:irisite_ingot",
+    "count": 9
+  }
+}

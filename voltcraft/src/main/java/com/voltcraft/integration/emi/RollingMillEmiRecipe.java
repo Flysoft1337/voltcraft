@@ -72,6 +72,7 @@ public class RollingMillEmiRecipe implements EmiRecipe {
         recipes.add(new RollingMillEmiRecipe(EmiStack.of(ModItems.LEAD_PLATE.get()), EmiStack.of(ModItems.LEAD_WIRE.get())));
         recipes.add(new RollingMillEmiRecipe(EmiStack.of(ModItems.NICKEL_PLATE.get()), EmiStack.of(ModItems.NICKEL_WIRE.get())));
         recipes.add(new RollingMillEmiRecipe(EmiStack.of(ModItems.MANGANESE_PLATE.get()), EmiStack.of(ModItems.MANGANESE_WIRE.get())));
+        recipes.add(new RollingMillEmiRecipe(EmiStack.of(ModItems.IRISITE_PLATE.get()), EmiStack.of(ModItems.IRISITE_WIRE.get())));
         return recipes;
     }
 }

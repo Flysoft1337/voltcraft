@@ -236,6 +236,32 @@ public final class ModItems {
             () -> new Item(new Item.Properties())
     );
 
+    // Irisite items (superconductor ore)
+    public static final DeferredItem<Item> RAW_IRISITE = ITEMS.register(
+            "raw_irisite",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRISITE_INGOT = ITEMS.register(
+            "irisite_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRISITE_PLATE = ITEMS.register(
+            "irisite_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRISITE_WIRE = ITEMS.register(
+            "irisite_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<WireCoilItem> IRISITE_WIRE_COIL = ITEMS.register(
+            "irisite_wire_coil",
+            () -> new WireCoilItem(WireType.IRISITE, new Item.Properties())
+    );
+
     // Copper plate (vanilla copper ingot → copper plate)
     public static final DeferredItem<Item> COPPER_PLATE = ITEMS.register(
             "copper_plate",

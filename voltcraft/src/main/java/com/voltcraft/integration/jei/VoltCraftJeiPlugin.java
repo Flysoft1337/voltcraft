@@ -2,10 +2,8 @@ package com.voltcraft.integration.jei;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.registry.ModBlocks;
-import com.voltcraft.registry.ModItems;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;

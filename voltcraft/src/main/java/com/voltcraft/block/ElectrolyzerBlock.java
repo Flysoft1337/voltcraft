@@ -1,8 +1,6 @@
 package com.voltcraft.block;
 
 import com.voltcraft.blockentity.ElectrolyzerBlockEntity;
-import com.voltcraft.registry.ModBlockEntities;
-import com.voltcraft.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;

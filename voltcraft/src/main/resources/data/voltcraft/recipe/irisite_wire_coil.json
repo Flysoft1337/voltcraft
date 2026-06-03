@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "voltcraft:spring"
+    },
+    {
+      "item": "voltcraft:irisite_wire"
+    }
+  ],
+  "result": {
+    "id": "voltcraft:irisite_wire_coil",
+    "count": 1
+  }
+}

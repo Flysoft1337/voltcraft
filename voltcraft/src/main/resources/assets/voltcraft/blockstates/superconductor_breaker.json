@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "voltcraft:block/superconductor_breaker"
+    },
+    "facing=south": {
+      "model": "voltcraft:block/superconductor_breaker",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "voltcraft:block/superconductor_breaker",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "voltcraft:block/superconductor_breaker",
+      "y": 270
+    }
+  }
+}

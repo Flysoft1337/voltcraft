@@ -1,0 +1,12 @@
+{
+  "type": "voltcraft:electrolyzer",
+  "ingredient": {
+    "item": "minecraft:water_bucket"
+  },
+  "result": {
+    "id": "voltcraft:lithium_ingot",
+    "count": 1
+  },
+  "energy": 1000,
+  "time": 200
+}

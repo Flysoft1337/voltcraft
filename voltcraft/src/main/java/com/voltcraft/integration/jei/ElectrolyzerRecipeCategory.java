@@ -13,7 +13,6 @@ import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,8 +60,8 @@ public class ElectrolyzerRecipeCategory implements IRecipeCategory<ElectrolyzerR
 
     public static List<Recipe> getRecipes() {
         List<Recipe> recipes = new ArrayList<>();
-        // TODO: 添加电解槽配方（待配方系统实现）
-        // 示例：recipes.add(new Recipe(new ItemStack(ModItems.BRINE_BUCKET.get()), new ItemStack(ModItems.SODIUM_INGOT.get())));
+        recipes.add(new Recipe(new ItemStack(net.minecraft.world.item.Items.WATER_BUCKET), new ItemStack(ModItems.LITHIUM_INGOT.get(), 1)));
+        recipes.add(new Recipe(new ItemStack(ModItems.BRINE_BUCKET.get()), new ItemStack(ModItems.SODIUM_INGOT.get(), 2)));
         return recipes;
     }
 

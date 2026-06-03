@@ -5,7 +5,6 @@ import com.voltcraft.registry.ModBlocks;
 import com.voltcraft.registry.ModItems;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
@@ -69,6 +68,7 @@ public class RollingMillRecipeCategory implements IRecipeCategory<RollingMillRec
         recipes.add(new Recipe(new ItemStack(ModItems.LEAD_PLATE.get()), new ItemStack(ModItems.LEAD_WIRE.get())));
         recipes.add(new Recipe(new ItemStack(ModItems.NICKEL_PLATE.get()), new ItemStack(ModItems.NICKEL_WIRE.get())));
         recipes.add(new Recipe(new ItemStack(ModItems.MANGANESE_PLATE.get()), new ItemStack(ModItems.MANGANESE_WIRE.get())));
+        recipes.add(new Recipe(new ItemStack(ModItems.IRISITE_PLATE.get()), new ItemStack(ModItems.IRISITE_WIRE.get())));
         return recipes;
     }
 

@@ -1,6 +1,7 @@
 package com.voltcraft.blockentity;
 
 import com.voltcraft.block.BreakerBlock;
+import com.voltcraft.electric.BlockedHandler;
 import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.protection.BreakerState;
 import com.voltcraft.electric.wire.IWireConnectable;
@@ -187,17 +188,6 @@ public class BreakerBlockEntity extends BlockEntity implements IWireConnectable 
         super.saveAdditional(tag, registries);
         tag.put(NBT_BUFFER, buffer.serializeNBT(registries));
         tag.putInt(NBT_OVERLOAD_TICKS, overloadTicks);
-    }
-
-    /** 跳闸时给输入面挂的"假"句柄：什么都不收。 */
-    private static final class BlockedHandler implements IEnergyStorage {
-        static final BlockedHandler INSTANCE = new BlockedHandler();
-        @Override public int receiveEnergy(int maxReceive, boolean simulate) { return 0; }
-        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
-        @Override public int getEnergyStored() { return 0; }
-        @Override public int getMaxEnergyStored() { return 0; }
-        @Override public boolean canExtract() { return false; }
-        @Override public boolean canReceive() { return false; }
     }
 
     @Override

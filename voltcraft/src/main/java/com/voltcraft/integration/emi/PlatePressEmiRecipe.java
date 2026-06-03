@@ -8,9 +8,7 @@ import dev.emi.emi.api.render.EmiTexture;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.widget.WidgetHolder;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
@@ -75,6 +73,7 @@ public class PlatePressEmiRecipe implements EmiRecipe {
         recipes.add(new PlatePressEmiRecipe(EmiStack.of(ModItems.LEAD_INGOT.get()), EmiStack.of(ModItems.LEAD_PLATE.get())));
         recipes.add(new PlatePressEmiRecipe(EmiStack.of(ModItems.SILVER_INGOT.get()), EmiStack.of(ModItems.SILVER_PLATE.get())));
         recipes.add(new PlatePressEmiRecipe(EmiStack.of(ModItems.TIN_INGOT.get()), EmiStack.of(ModItems.TIN_PLATE.get())));
+        recipes.add(new PlatePressEmiRecipe(EmiStack.of(ModItems.IRISITE_INGOT.get()), EmiStack.of(ModItems.IRISITE_PLATE.get())));
         return recipes;
     }
 }
