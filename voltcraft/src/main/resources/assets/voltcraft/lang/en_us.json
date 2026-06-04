@@ -71,6 +71,7 @@
   "voltcraft.wire.start_set": "Wire start set at %s",
   "voltcraft.wire.connected": "Wire connected from %s to %s",
   "voltcraft.wire.failed": "Wire connection failed (too far or already exists)",
+  "voltcraft.wire.out_of_range": "Exceeds maximum connection length",
   "block.voltcraft.low_voltage_cable": "Low Voltage Cable (220V)",
   "block.voltcraft.medium_voltage_cable": "Medium Voltage Cable (10kV)",
   "block.voltcraft.high_voltage_cable": "High Voltage Cable (35kV)",

@@ -71,6 +71,7 @@
   "voltcraft.wire.start_set": "线缆起点设置在 %s",
   "voltcraft.wire.connected": "线缆已连接从 %s 到 %s",
   "voltcraft.wire.failed": "线缆连接失败（距离超限或已存在）",
+  "voltcraft.wire.out_of_range": "超出最大连接长度",
   "block.voltcraft.low_voltage_cable": "低压电缆 (220V)",
   "block.voltcraft.medium_voltage_cable": "中压电缆 (10kV)",
   "block.voltcraft.high_voltage_cable": "高压电缆 (35kV)",

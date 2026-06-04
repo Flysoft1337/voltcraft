@@ -1,6 +1,7 @@
 package com.voltcraft;
 
 import com.mojang.logging.LogUtils;
+import com.voltcraft.network.PendingWireSyncPacket;
 import com.voltcraft.network.WireConnectionSyncPacket;
 import com.voltcraft.registry.ModBlockEntities;
 import com.voltcraft.registry.ModBlocks;
@@ -40,6 +41,11 @@ public class VoltCraft {
                 WireConnectionSyncPacket.TYPE,
                 WireConnectionSyncPacket.CODEC,
                 WireConnectionSyncPacket::handle
+        );
+        registrar.playToClient(
+                PendingWireSyncPacket.TYPE,
+                PendingWireSyncPacket.CODEC,
+                PendingWireSyncPacket::handle
         );
     }
 }
