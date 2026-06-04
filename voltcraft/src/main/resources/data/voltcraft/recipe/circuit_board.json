@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "TTT",
+    "WCW",
+    "RRR"
+  ],
+  "key": {
+    "T": {
+      "item": "voltcraft:tin_wire"
+    },
+    "W": {
+      "item": "voltcraft:copper_wire"
+    },
+    "C": {
+      "item": "voltcraft:copper_plate"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "id": "voltcraft:circuit_board",
+    "count": 1
+  }
+}

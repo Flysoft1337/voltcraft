@@ -3,6 +3,8 @@ package com.voltcraft.event;
 import com.voltcraft.VoltCraft;
 import com.voltcraft.registry.ModMenuTypes;
 import com.voltcraft.screen.ElectrolyzerScreen;
+import com.voltcraft.screen.PlatePressScreen;
+import com.voltcraft.screen.RollingMillScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -19,5 +21,7 @@ public final class ClientModBusEvents {
     @SubscribeEvent
     public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.ELECTROLYZER.get(), ElectrolyzerScreen::new);
+        event.register(ModMenuTypes.ROLLING_MILL.get(), RollingMillScreen::new);
+        event.register(ModMenuTypes.PLATE_PRESS.get(), PlatePressScreen::new);
     }
 }

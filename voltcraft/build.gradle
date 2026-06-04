@@ -27,6 +27,10 @@ repositories {
         name = 'Modrinth'
         url = uri('https://api.modrinth.com/maven')
     }
+    maven {
+        name = 'BlameJared'
+        url = uri('https://maven.blamejared.com')
+    }
 }
 
 base {
@@ -88,6 +92,14 @@ dependencies {
     // Jade（悬停信息 mod）：编译期可见，运行时也加载，但不作为 publish 依赖
     compileOnly "maven.modrinth:jade:${jade_version}"
     localRuntime "maven.modrinth:jade:${jade_version}"
+
+    // JEI（配方查看 mod）- 从 BlameJared Maven 获取 NeoForge 版本
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+
+    // EMI（配方查看 mod，NEI 的现代替代）
+    compileOnly "maven.modrinth:emi:${emi_version}"
+    localRuntime "maven.modrinth:emi:${emi_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

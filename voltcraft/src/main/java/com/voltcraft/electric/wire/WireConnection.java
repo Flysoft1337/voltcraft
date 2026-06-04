@@ -2,7 +2,6 @@ package com.voltcraft.electric.wire;
 
 import com.voltcraft.electric.WireType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * 线缆连接。

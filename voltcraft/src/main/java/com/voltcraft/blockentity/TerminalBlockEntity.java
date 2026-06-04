@@ -1,6 +1,7 @@
 package com.voltcraft.blockentity;
 
 import com.voltcraft.block.TerminalBlock;
+import com.voltcraft.electric.BlockedHandler;
 import com.voltcraft.electric.CableTier;
 import com.voltcraft.electric.protection.WiringState;
 import com.voltcraft.electric.wire.IWireConnectable;
@@ -125,16 +126,6 @@ public class TerminalBlockEntity extends BlockEntity implements IWireConnectable
         tag.put(NBT_BUFFER, buffer.serializeNBT(registries));
     }
 
-    /** 短路时机器面挂的"假"句柄。 */
-    private static final class BlockedHandler implements IEnergyStorage {
-        static final BlockedHandler INSTANCE = new BlockedHandler();
-        @Override public int receiveEnergy(int maxReceive, boolean simulate) { return 0; }
-        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
-        @Override public int getEnergyStored() { return 0; }
-        @Override public int getMaxEnergyStored() { return 0; }
-        @Override public boolean canExtract() { return false; }
-        @Override public boolean canReceive() { return false; }
-    }
 
     @Override
     public List<WireEndpoint> getWireEndpoints(BlockPos pos, BlockState state) {

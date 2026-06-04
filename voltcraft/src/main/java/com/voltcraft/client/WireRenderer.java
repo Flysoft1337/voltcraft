@@ -112,6 +112,7 @@ public class WireRenderer {
             case COPPER -> 0xB87333;  // 铜色
             case TIN -> 0x808080;     // 锡色
             case SILVER -> 0xC0C0C0;  // 银色
+            case IRISITE -> 0x7FFFD4; // 虹晶石色（碧绿色）
         };
     }
 }

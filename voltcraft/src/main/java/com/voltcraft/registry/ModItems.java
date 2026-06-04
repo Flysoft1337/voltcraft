@@ -137,6 +137,31 @@ public final class ModItems {
             () -> new BrineBucketItem(new Item.Properties())
     );
 
+    // Parts - mechanical components
+    /** 齿轮 — 机械传动部件 */
+    public static final DeferredItem<Item> GEAR = ITEMS.register(
+            "gear",
+            () -> new Item(new Item.Properties())
+    );
+
+    /** 电动马达 — 机器动力来源 */
+    public static final DeferredItem<Item> ELECTRIC_MOTOR = ITEMS.register(
+            "electric_motor",
+            () -> new Item(new Item.Properties())
+    );
+
+    /** 电路板 — 电子控制核心 */
+    public static final DeferredItem<Item> CIRCUIT_BOARD = ITEMS.register(
+            "circuit_board",
+            () -> new Item(new Item.Properties())
+    );
+
+    /** 泵 — 流体机器组件 */
+    public static final DeferredItem<Item> PUMP = ITEMS.register(
+            "pump",
+            () -> new Item(new Item.Properties())
+    );
+
     // Tools
     public static final DeferredItem<ToolItem> HAMMER = ITEMS.register(
             "hammer",
@@ -208,6 +233,79 @@ public final class ModItems {
 
     public static final DeferredItem<Item> TIN_PLATE = ITEMS.register(
             "tin_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Irisite items (superconductor ore)
+    public static final DeferredItem<Item> RAW_IRISITE = ITEMS.register(
+            "raw_irisite",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRISITE_INGOT = ITEMS.register(
+            "irisite_ingot",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRISITE_PLATE = ITEMS.register(
+            "irisite_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRISITE_WIRE = ITEMS.register(
+            "irisite_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<WireCoilItem> IRISITE_WIRE_COIL = ITEMS.register(
+            "irisite_wire_coil",
+            () -> new WireCoilItem(WireType.IRISITE, new Item.Properties())
+    );
+
+    // Copper plate (vanilla copper ingot → copper plate)
+    public static final DeferredItem<Item> COPPER_PLATE = ITEMS.register(
+            "copper_plate",
+            () -> new Item(new Item.Properties())
+    );
+
+    // Wire items (produced by rolling mill from plates)
+    public static final DeferredItem<Item> COPPER_WIRE = ITEMS.register(
+            "copper_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> TIN_WIRE = ITEMS.register(
+            "tin_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> SILVER_WIRE = ITEMS.register(
+            "silver_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> IRON_WIRE = ITEMS.register(
+            "iron_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> ZINC_WIRE = ITEMS.register(
+            "zinc_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> LEAD_WIRE = ITEMS.register(
+            "lead_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> NICKEL_WIRE = ITEMS.register(
+            "nickel_wire",
+            () -> new Item(new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> MANGANESE_WIRE = ITEMS.register(
+            "manganese_wire",
             () -> new Item(new Item.Properties())
     );
 

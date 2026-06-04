@@ -1,0 +1,12 @@
+{
+  "type": "voltcraft:electrolyzer",
+  "ingredient": {
+    "item": "voltcraft:brine_bucket"
+  },
+  "result": {
+    "id": "voltcraft:sodium_ingot",
+    "count": 2
+  },
+  "energy": 1000,
+  "time": 200
+}

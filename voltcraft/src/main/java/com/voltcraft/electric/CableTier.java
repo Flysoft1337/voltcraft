@@ -10,7 +10,8 @@ public enum CableTier implements StringRepresentable {
     LOW("low_voltage", VoltageTier.LOW, 1_000),
     MEDIUM("medium_voltage", VoltageTier.MEDIUM, 8_000),
     HIGH("high_voltage", VoltageTier.HIGH, 32_000),
-    EXTRA_HIGH("extra_high_voltage", VoltageTier.EXTRA_HIGH, 128_000);
+    EXTRA_HIGH("extra_high_voltage", VoltageTier.EXTRA_HIGH, 128_000),
+    SUPERCONDUCTOR("superconductor", VoltageTier.EXTRA_HIGH, Integer.MAX_VALUE);
 
     private final String name;
     private final VoltageTier voltage;

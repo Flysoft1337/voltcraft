@@ -2,6 +2,9 @@ package com.voltcraft.integration.jade;
 
 import com.voltcraft.VoltCraft;
 import com.voltcraft.block.BreakerBlock;
+import com.voltcraft.block.ElectrolyzerBlock;
+import com.voltcraft.block.PlatePressBlock;
+import com.voltcraft.block.RollingMillBlock;
 import com.voltcraft.block.TerminalBlock;
 import com.voltcraft.block.TransformerBlock;
 import snownee.jade.api.IWailaClientRegistration;
@@ -22,6 +25,9 @@ public final class VoltCraftJadePlugin implements IWailaPlugin {
         registration.registerBlockDataProvider(TransformerJadeProvider.INSTANCE, com.voltcraft.blockentity.TransformerBlockEntity.class);
         registration.registerBlockDataProvider(BreakerJadeProvider.INSTANCE, com.voltcraft.blockentity.BreakerBlockEntity.class);
         registration.registerBlockDataProvider(TerminalJadeProvider.INSTANCE, com.voltcraft.blockentity.TerminalBlockEntity.class);
+        registration.registerBlockDataProvider(MachineJadeProvider.INSTANCE, com.voltcraft.blockentity.ElectrolyzerBlockEntity.class);
+        registration.registerBlockDataProvider(MachineJadeProvider.INSTANCE, com.voltcraft.blockentity.PlatePressBlockEntity.class);
+        registration.registerBlockDataProvider(MachineJadeProvider.INSTANCE, com.voltcraft.blockentity.RollingMillBlockEntity.class);
     }
 
     @Override
@@ -29,5 +35,8 @@ public final class VoltCraftJadePlugin implements IWailaPlugin {
         registration.registerBlockComponent(TransformerJadeProvider.INSTANCE, TransformerBlock.class);
         registration.registerBlockComponent(BreakerJadeProvider.INSTANCE, BreakerBlock.class);
         registration.registerBlockComponent(TerminalJadeProvider.INSTANCE, TerminalBlock.class);
+        registration.registerBlockComponent(MachineJadeProvider.INSTANCE, ElectrolyzerBlock.class);
+        registration.registerBlockComponent(MachineJadeProvider.INSTANCE, PlatePressBlock.class);
+        registration.registerBlockComponent(MachineJadeProvider.INSTANCE, RollingMillBlock.class);
     }
 }

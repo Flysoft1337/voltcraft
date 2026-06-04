@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PFP",
+    "FWF",
+    "PFP"
+  ],
+  "key": {
+    "P": {
+      "item": "voltcraft:iron_plate"
+    },
+    "F": {
+      "item": "voltcraft:fuse"
+    },
+    "W": {
+      "item": "voltcraft:copper_wire"
+    }
+  },
+  "result": {
+    "id": "voltcraft:pump",
+    "count": 1
+  }
+}
