@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "voltcraft:block/deepslate_irisite_ore"
-  }
-}

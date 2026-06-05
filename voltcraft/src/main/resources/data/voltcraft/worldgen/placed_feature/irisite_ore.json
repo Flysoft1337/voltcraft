@@ -1,0 +1,10 @@
+{
+  "feature": "voltcraft:irisite_ore",
+  "placement": [
+    { "type": "minecraft:count", "count": 6 },
+    { "type": "minecraft:in_square" },
+    { "type": "minecraft:height_range", "height": { "type": "minecraft:uniform", "min_inclusive": { "absolute": 10 }, "max_inclusive": { "absolute": 56 } } },
+    { "type": "minecraft:surface_relative_threshold_filter", "heightmap": "OCEAN_FLOOR_WG", "min_inclusive": { "above_bottom": 0 }, "max_inclusive": { "below_top": 0 } },
+    { "type": "minecraft:biome" }
+  ]
+}

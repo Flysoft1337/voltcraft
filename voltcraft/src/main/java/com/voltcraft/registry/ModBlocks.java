@@ -189,16 +189,6 @@ public final class ModBlocks {
                     .requiresCorrectToolForDrops())
     );
 
-    public static final DeferredBlock<Block> DEEPSLATE_IRISITE_ORE = registerWithItem(
-            "deepslate_irisite_ore",
-            () -> new Block(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.DEEPSLATE)
-                    .destroyTime(4.5f)
-                    .explosionResistance(6.0f)
-                    .sound(SoundType.DEEPSLATE)
-                    .requiresCorrectToolForDrops())
-    );
-
     // Irisite block (metal block)
     public static final DeferredBlock<Block> IRISITE_BLOCK = registerWithItem(
             "irisite_block",

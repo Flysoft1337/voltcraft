@@ -40,6 +40,7 @@ public class ElectrolyzerRecipeCategory implements IRecipeCategory<ElectrolyzerR
         return Component.translatable("gui.voltcraft.jei.category.electrolyzer");
     }
 
+    @SuppressWarnings("removal") // JEI 19.x deprecated getBackground() for removal but no replacement yet
     @Override
     public IDrawable getBackground() {
         return background;

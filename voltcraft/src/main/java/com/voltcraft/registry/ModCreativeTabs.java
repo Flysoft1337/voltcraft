@@ -72,7 +72,6 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.RAW_CASSITERITE.get());
                         output.accept(ModItems.TIN_INGOT.get());
                         output.accept(ModBlocks.IRISITE_ORE.get());
-                        output.accept(ModBlocks.DEEPSLATE_IRISITE_ORE.get());
                         output.accept(ModItems.RAW_IRISITE.get());
                         output.accept(ModItems.IRISITE_INGOT.get());
                         output.accept(ModBlocks.IRISITE_BLOCK.get());
