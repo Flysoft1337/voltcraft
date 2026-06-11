@@ -41,6 +41,7 @@ public class PlatePressRecipeCategory implements IRecipeCategory<PlatePressRecip
         return Component.translatable("gui.voltcraft.jei.category.plate_press");
     }
 
+    @SuppressWarnings("removal") // JEI 19.x deprecated getBackground() for removal but no replacement yet
     @Override
     public IDrawable getBackground() {
         return background;

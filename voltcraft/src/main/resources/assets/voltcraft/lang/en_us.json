@@ -58,7 +58,6 @@
   "item.voltcraft.tin_ingot": "Tin Ingot",
   "item.voltcraft.tin_plate": "Tin Plate",
   "block.voltcraft.irisite_ore": "Irisite Ore",
-  "block.voltcraft.deepslate_irisite_ore": "Deepslate Irisite Ore",
   "block.voltcraft.irisite_block": "Irisite Block",
   "item.voltcraft.raw_irisite": "Raw Irisite",
   "item.voltcraft.irisite_ingot": "Irisite Ingot",
@@ -150,5 +149,6 @@
 
   "emi.category.voltcraft.plate_press": "Plate Press",
   "emi.category.voltcraft.rolling_mill": "Rolling Mill",
-  "emi.category.voltcraft.electrolyzer": "Electrolyzer"
+  "emi.category.voltcraft.electrolyzer": "Electrolyzer",
+  "effect.voltcraft.radiation": "Radiation"
 }

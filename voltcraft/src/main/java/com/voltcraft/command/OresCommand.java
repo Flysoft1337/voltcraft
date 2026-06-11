@@ -45,7 +45,6 @@ public class OresCommand {
         registerColor("voltcraft:spodumene_ore", 0.8f, 0.5f, 1.0f);        // 紫色
         registerColor("voltcraft:deepslate_spodumene_ore", 0.8f, 0.5f, 1.0f);
         registerColor("voltcraft:irisite_ore", 0.5f, 1.0f, 0.85f);         // 碧绿
-        registerColor("voltcraft:deepslate_irisite_ore", 0.5f, 1.0f, 0.85f);
     }
 
     private static void registerColor(String blockId, float r, float g, float b) {

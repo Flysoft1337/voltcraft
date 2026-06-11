@@ -40,6 +40,7 @@ public class RollingMillRecipeCategory implements IRecipeCategory<RollingMillRec
         return Component.translatable("gui.voltcraft.jei.category.rolling_mill");
     }
 
+    @SuppressWarnings("removal") // JEI 19.x deprecated getBackground() for removal but no replacement yet
     @Override
     public IDrawable getBackground() {
         return background;

@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.voltcraft.network.PendingWireSyncPacket;
 import com.voltcraft.network.WireConnectionSyncPacket;
 import com.voltcraft.registry.ModBlockEntities;
+import com.voltcraft.effect.ModEffects;
 import com.voltcraft.registry.ModBlocks;
 import com.voltcraft.registry.ModCreativeTabs;
 import com.voltcraft.registry.ModDataComponents;
@@ -28,6 +29,7 @@ public class VoltCraft {
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+        ModEffects.register(modEventBus);
 
         // 注册网络包
         modEventBus.addListener(this::registerPackets);
